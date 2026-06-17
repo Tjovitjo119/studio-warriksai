@@ -245,6 +245,11 @@ export default function Dashboard() {
     };
   }, [candlesMap, activeSymbol, lastDecision, multiStrategy]);
 
+  // Filter signals to show only those for the currently selected symbol
+  const filteredSignals = useMemo(() => {
+    return signals.filter((s) => s.symbol === activeSymbol);
+  }, [signals, activeSymbol]);
+
   const perfStats = useMemo(() => {
     const closed = trades.filter((t) => t.status !== "OPEN");
     const wins = closed.filter((t) => t.status === "WIN");
@@ -368,7 +373,7 @@ export default function Dashboard() {
             </div>
             <div className="w-[300px] shrink-0 border-l border-[#e0dad0] overflow-hidden bg-[#fcfaf7]">
               <RightPanel
-                signals={signals}
+                signals={filteredSignals}
                 multiStrategy={multiStrategy}
                 strategySummary={strategySummary}
                 activeSymbol={activeSymbol}

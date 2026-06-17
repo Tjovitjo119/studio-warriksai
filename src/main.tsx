@@ -6,6 +6,7 @@ import { ConvexReactClient } from "convex/react";
 import { StrictMode, useEffect, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import "./index.css";
 import "./types/global.d.ts";
 
@@ -54,22 +55,24 @@ function RouteSyncer() {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <VlyToolbar />
-    <InstrumentationProvider>
-      <ConvexAuthProvider client={convex}>
-        <BrowserRouter>
-          <RouteSyncer />
-          <Suspense fallback={<RouteLoading />}>
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route path="/auth" element={<AuthPage redirectAfterAuth="/dashboard" />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-        <Toaster />
-      </ConvexAuthProvider>
-    </InstrumentationProvider>
+    <ErrorBoundary>
+      <VlyToolbar />
+      <InstrumentationProvider>
+        <ConvexAuthProvider client={convex}>
+          <BrowserRouter>
+            <RouteSyncer />
+            <Suspense fallback={<RouteLoading />}>
+              <Routes>
+                <Route path="/" element={<Landing />} />
+                <Route path="/auth" element={<AuthPage redirectAfterAuth="/dashboard" />} />
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+          <Toaster />
+        </ConvexAuthProvider>
+      </InstrumentationProvider>
+    </ErrorBoundary>
   </StrictMode>,
 );
