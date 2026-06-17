@@ -138,7 +138,7 @@ export default function PerformanceView({ stats, decisionReason, decisionStatus,
               <span className="text-[7px] text-[#64748b] uppercase tracking-wider">Total Trades</span>
             </div>
             <span className="text-lg font-bold trading-mono text-[#e2e8f0]">{stats.total}</span>
-            <div className="text-[7px] text-[#475569]">{stats.wins > 0 ? `Avg W: $${(stats.totalPnl / stats.wins).toFixed(0) : 0}` : ""}</div>
+            <div className="text-[7px] text-[#475569]">{stats.wins > 0 ? `Avg W: $${(stats.totalPnl / stats.wins).toFixed(0)}` : ""}</div>
           </div>
         </div>
 
