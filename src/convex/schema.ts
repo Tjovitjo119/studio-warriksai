@@ -132,6 +132,56 @@ const schema = defineSchema(
     }).index("by_user", ["userId"])
       .index("by_user_symbol", ["userId", "symbol"])
       .index("by_user_status", ["userId", "status"]),
+    // Backtest runs
+    backtests: defineTable({
+      userId: v.id("users"),
+      name: v.string(),
+      symbol: v.string(),
+      timeframe: v.string(),
+      startDate: v.string(),
+      endDate: v.string(),
+      iterations: v.number(),
+      selectedEngines: v.array(v.string()),
+      result: v.object({
+        total: v.number(),
+        tradeableCount: v.number(),
+        tradeablePercent: v.number(),
+        avgConfidence: v.number(),
+        avgAgreement: v.number(),
+        eliteCount: v.number(),
+        institutionalCount: v.number(),
+        highProbCount: v.number(),
+        moderateProbCount: v.number(),
+        noTradeCount: v.number(),
+        buySignals: v.number(),
+        sellSignals: v.number(),
+        finalEquity: v.number(),
+        totalReturn: v.number(),
+        equityCurve: v.array(v.object({
+          step: v.number(),
+          equity: v.number(),
+        })),
+        engineStats: v.array(v.object({
+          type: v.string(),
+          signalCount: v.number(),
+          avgConfidence: v.number(),
+          buyCount: v.number(),
+          sellCount: v.number(),
+          neutralCount: v.number(),
+          total: v.number(),
+        })),
+        iterationSamples: v.array(v.object({
+          agreement: v.string(),
+          agreementCount: v.number(),
+          confluenceScore: v.number(),
+          tradeable: v.boolean(),
+          consensusDirection: v.string(),
+          activeEngines: v.number(),
+        })),
+      }),
+      createdAt: v.number(),
+    }).index("by_user", ["userId"])
+      .index("by_user_symbol", ["userId", "symbol"]),
   },
   {
     schemaValidation: false,

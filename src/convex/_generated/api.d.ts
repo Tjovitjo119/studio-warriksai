@@ -10,6 +10,7 @@
 
 import type * as auth from "../auth.js";
 import type * as auth_emailOtp from "../auth/emailOtp.js";
+import type * as backtests from "../backtests.js";
 import type * as http from "../http.js";
 import type * as journal from "../journal.js";
 import type * as marketData from "../marketData.js";
@@ -27,6 +28,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   "auth/emailOtp": typeof auth_emailOtp;
+  backtests: typeof backtests;
   http: typeof http;
   journal: typeof journal;
   marketData: typeof marketData;
