@@ -1,6 +1,6 @@
 // ============================================================================
-// WARRIKS AI — Studio Trade Execution Panel
-// Clean order entry with warm tones and thin framing
+// WARRIKS AI — N.E.O.N. Trade Execution Panel
+// Dark order entry with neon green/red buy/sell buttons
 // ============================================================================
 
 import { useState, useCallback } from "react";
@@ -92,13 +92,13 @@ export default function TradeExecution({ activeSymbol, currentPrice, decision, o
   const quickSizes = [0.1, 0.25, 0.5, 1.0, 2.0];
 
   return (
-    <div className="h-full flex flex-col bg-[#fcfaf7] overflow-y-auto">
-      <div className="px-3 py-2 border-b border-[#e0dad0] flex items-center justify-between">
+    <div className="h-full flex flex-col bg-[#0a0e14] overflow-y-auto">
+      <div className="px-3 py-2 border-b border-[#1a2332] flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <Zap className="w-3 h-3 text-[#c49a6c]" />
-          <span className="text-[10px] font-semibold text-[#2c2822] uppercase tracking-wider">Order Entry</span>
+          <Zap className="w-3 h-3 text-[#00d4ff]" />
+          <span className="text-[10px] font-semibold text-white uppercase tracking-wider">Order Entry</span>
         </div>
-        <span className="text-[9px] text-[#b5ab9c]">{activeSymbol}</span>
+        <span className="text-[9px] text-[#556677]">{activeSymbol}</span>
       </div>
 
       <div className="p-3 space-y-3">
@@ -107,8 +107,8 @@ export default function TradeExecution({ activeSymbol, currentPrice, decision, o
             onClick={() => setDirection("BUY")}
             className={`flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold transition-all border ${
               direction === "BUY"
-                ? "bg-[#7a9e7a]/10 border-[#7a9e7a]/30 text-[#7a9e7a]"
-                : "bg-[#f8f6f2] border-[#e0dad0] text-[#8a8070] hover:text-[#2c2822]"
+                ? "bg-[#00ff41]/10 border-[#00ff41]/30 text-[#00ff41]"
+                : "bg-[#0a0e14] border-[#1a2332] text-[#556677] hover:text-white"
             }`}
           >
             <ArrowUp className="w-3.5 h-3.5" /> BUY
@@ -117,8 +117,8 @@ export default function TradeExecution({ activeSymbol, currentPrice, decision, o
             onClick={() => setDirection("SELL")}
             className={`flex items-center justify-center gap-1.5 py-2 text-[11px] font-bold transition-all border ${
               direction === "SELL"
-                ? "bg-[#c46a6a]/10 border-[#c46a6a]/30 text-[#c46a6a]"
-                : "bg-[#f8f6f2] border-[#e0dad0] text-[#8a8070] hover:text-[#2c2822]"
+                ? "bg-[#ff3355]/10 border-[#ff3355]/30 text-[#ff3355]"
+                : "bg-[#0a0e14] border-[#1a2332] text-[#556677] hover:text-white"
             }`}
           >
             <ArrowDown className="w-3.5 h-3.5" /> SELL
@@ -127,82 +127,82 @@ export default function TradeExecution({ activeSymbol, currentPrice, decision, o
 
         {decision?.status === "TRADE" && (
           <button onClick={fillFromDecision}
-            className="w-full flex items-center justify-center gap-1.5 py-1.5 text-[9px] font-medium text-[#2c2822] bg-[#f0ece6] border border-[#e0dad0] hover:bg-[#e8e3da] transition-all">
+            className="w-full flex items-center justify-center gap-1.5 py-1.5 text-[9px] font-medium text-[#00d4ff] bg-[#00d4ff]/10 border border-[#00d4ff]/20 hover:bg-[#00d4ff]/20 transition-all">
             <Zap className="w-3 h-3" />
             Fill from AI Signal ({decision.direction} @ {decision.entryZone.midpoint.toFixed(1)})
           </button>
         )}
 
         <div className="space-y-1">
-          <label className="flex items-center justify-between text-[9px] text-[#8a8070]">
+          <label className="flex items-center justify-between text-[9px] text-[#556677]">
             <span>Entry Price</span>
-            <span className="text-[#b5ab9c]">Current: {currentPrice.toFixed(activeSymbol === "XAUUSD" ? 1 : 2)}</span>
+            <span className="text-[#445566]">Current: {currentPrice.toFixed(activeSymbol === "XAUUSD" ? 1 : 2)}</span>
           </label>
           <div className="relative">
-            <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#b5ab9c]" />
+            <DollarSign className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#556677]" />
             <input type="number" value={entryPrice} onChange={(e) => setEntryPrice(e.target.value)}
-              className="w-full bg-[#f8f6f2] border border-[#e0dad0] text-[11px] text-[#2c2822] px-6 py-1.5 font-mono focus:outline-none focus:border-[#2c2822] transition-colors" />
+              className="w-full bg-[#0a0e14] border border-[#1a2332] text-[11px] text-white px-6 py-1.5 font-mono focus:outline-none focus:border-[#00ff41]/50 transition-colors" />
           </div>
         </div>
 
         <div className="space-y-1">
-          <label className="flex items-center justify-between text-[9px] text-[#8a8070]">
+          <label className="flex items-center justify-between text-[9px] text-[#556677]">
             <span>Stop Loss</span>
-            <span className="text-[#c46a6a]">Risk</span>
+            <span className="text-[#ff3355]">Risk</span>
           </label>
           <div className="relative">
-            <Target className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#c46a6a]/60" />
+            <Target className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#ff3355]/60" />
             <input type="number" value={stopLoss} onChange={(e) => setStopLoss(e.target.value)}
-              className="w-full bg-[#f8f6f2] border border-[#e0dad0] text-[11px] text-[#c46a6a] px-6 py-1.5 font-mono focus:outline-none focus:border-[#2c2822] transition-colors" />
+              className="w-full bg-[#0a0e14] border border-[#1a2332] text-[11px] text-[#ff3355] px-6 py-1.5 font-mono focus:outline-none focus:border-[#00ff41]/50 transition-colors" />
           </div>
         </div>
 
         <div className="space-y-1">
-          <label className="flex items-center justify-between text-[9px] text-[#8a8070]">
+          <label className="flex items-center justify-between text-[9px] text-[#556677]">
             <span>Take Profit (TP1)</span>
-            <span className="text-[#7a9e7a]">Reward</span>
+            <span className="text-[#00ff41]">Reward</span>
           </label>
           <div className="relative">
-            <Target className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#7a9e7a]/60" />
+            <Target className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#00ff41]/60" />
             <input type="number" value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)}
-              className="w-full bg-[#f8f6f2] border border-[#e0dad0] text-[11px] text-[#7a9e7a] px-6 py-1.5 font-mono focus:outline-none focus:border-[#2c2822] transition-colors" />
+              className="w-full bg-[#0a0e14] border border-[#1a2332] text-[11px] text-[#00ff41] px-6 py-1.5 font-mono focus:outline-none focus:border-[#00ff41]/50 transition-colors" />
           </div>
         </div>
 
         <div className="space-y-1">
-          <label className="flex items-center justify-between text-[9px] text-[#8a8070]">
+          <label className="flex items-center justify-between text-[9px] text-[#556677]">
             <span>Quantity</span>
           </label>
           <div className="relative">
-            <Activity className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#b5ab9c]" />
+            <Activity className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-[#556677]" />
             <input type="number" value={quantity} onChange={(e) => setQuantity(e.target.value)}
-              className="w-full bg-[#f8f6f2] border border-[#e0dad0] text-[11px] text-[#2c2822] px-6 py-1.5 font-mono focus:outline-none focus:border-[#2c2822] transition-colors" />
+              className="w-full bg-[#0a0e14] border border-[#1a2332] text-[11px] text-white px-6 py-1.5 font-mono focus:outline-none focus:border-[#00ff41]/50 transition-colors" />
           </div>
           <div className="flex gap-0.5 mt-1">
             {quickSizes.map((size) => (
               <button key={size} onClick={() => setQuantity(size.toString())}
                 className={`flex-1 py-1 text-[8px] font-medium transition-all border ${
                   parseFloat(quantity) === size
-                    ? "bg-[#f0ece6] border-[#ddd6cb] text-[#2c2822]"
-                    : "bg-white border-[#e0dad0] text-[#8a8070] hover:text-[#2c2822]"
+                    ? "bg-[#00ff41]/10 border-[#00ff41]/30 text-[#00ff41]"
+                    : "bg-[#0a0e14] border-[#1a2332] text-[#556677] hover:text-white"
                 }`}>{size}</button>
             ))}
           </div>
         </div>
 
         {entry > 0 && sl > 0 && (
-          <div className="border border-[#e0dad0] bg-[#f8f6f2] p-2">
+          <div className="border border-[#1a2332] bg-[#0a0e14] p-2">
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[9px] text-[#8a8070]">Risk Amount</span>
-              <span className="text-[10px] font-bold text-[#c46a6a]">${riskAmount.toFixed(2)}</span>
+              <span className="text-[9px] text-[#556677]">Risk Amount</span>
+              <span className="text-[10px] font-bold text-[#ff3355]">${riskAmount.toFixed(2)}</span>
             </div>
             <div className="flex items-center justify-between mb-1">
-              <span className="text-[9px] text-[#8a8070]">Reward Amount</span>
-              <span className="text-[10px] font-bold text-[#7a9e7a]">${rewardAmount.toFixed(2)}</span>
+              <span className="text-[9px] text-[#556677]">Reward Amount</span>
+              <span className="text-[10px] font-bold text-[#00ff41]">${rewardAmount.toFixed(2)}</span>
             </div>
-            <div className="flex items-center justify-between border-t border-[#e0dad0] pt-1">
-              <span className="text-[9px] text-[#8a8070]">Risk:Reward</span>
-              <span className={`text-[11px] font-bold ${riskReward >= 2 ? "text-[#7a9e7a]" : riskReward >= 1 ? "text-[#c49a6c]" : "text-[#c46a6a]"}`}>
+            <div className="flex items-center justify-between border-t border-[#1a2332] pt-1">
+              <span className="text-[9px] text-[#556677]">Risk:Reward</span>
+              <span className={`text-[11px] font-bold ${riskReward >= 2 ? "text-[#00ff41]" : riskReward >= 1 ? "text-[#ffaa00]" : "text-[#ff3355]"}`}>
                 1:{riskReward.toFixed(1)}
               </span>
             </div>
@@ -211,12 +211,12 @@ export default function TradeExecution({ activeSymbol, currentPrice, decision, o
 
         <button onClick={handleExecute} disabled={isExecuting || executed}
           className={`w-full py-2 text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 ${
-            executed ? "bg-[#7a9e7a] text-white" :
-            direction === "BUY" ? "bg-[#7a9e7a] text-white hover:bg-[#6a8e6a]" :
-            "bg-[#c46a6a] text-white hover:bg-[#b55a5a]"
+            executed ? "bg-[#00ff41] text-black" :
+            direction === "BUY" ? "bg-[#00ff41] text-black hover:bg-[#00cc33] hover:shadow-[0_0_12px_rgba(0,255,65,0.2)]" :
+            "bg-[#ff3355] text-white hover:bg-[#cc1133] hover:shadow-[0_0_12px_rgba(255,51,85,0.2)]"
           } disabled:opacity-50`}>
           {isExecuting ? (
-            <><div className="w-3 h-3 border border-white/30 border-t-transparent rounded-full animate-spin" /> Executing...</>
+            <><div className="w-3 h-3 border border-current/30 border-t-transparent rounded-full animate-spin" /> Executing...</>
           ) : executed ? (
             <><Check className="w-3.5 h-3.5" /> Position Opened</>
           ) : (
@@ -226,7 +226,7 @@ export default function TradeExecution({ activeSymbol, currentPrice, decision, o
 
         {error && (
           <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }}
-            className="flex items-center gap-1.5 text-[9px] text-[#c46a6a] bg-[#c46a6a]/5 border border-[#c46a6a]/20 px-2 py-1.5">
+            className="flex items-center gap-1.5 text-[9px] text-[#ff3355] bg-[#ff3355]/10 border border-[#ff3355]/20 px-2 py-1.5">
             <AlertTriangle className="w-3 h-3 shrink-0" /> {error}
           </motion.div>
         )}

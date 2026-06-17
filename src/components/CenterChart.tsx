@@ -1,11 +1,10 @@
 // ============================================================================
-// WARRIKS AI — Studio Center Chart
-// Clean canvas chart with warm tones, thin lines, editorial minimalism
+// WARRIKS AI — N.E.O.N. Center Chart
+// Dark canvas, neon green/cyan/red candles, glowing indicators
 // ============================================================================
 
-import { useCallback, useEffect, useRef, useState, useMemo } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Candle, PriceZone, TradeDecision } from "@/engine/types";
-import { BarChart3, Maximize2, Minus, Plus, Crosshair } from "lucide-react";
 
 interface ChartOverlayData {
   candles: Candle[];
@@ -57,7 +56,7 @@ export default function CenterChart({
 
     const { candles } = data;
     if (candles.length < 2) {
-      ctx.fillStyle = "#b5ab9c";
+      ctx.fillStyle = "#556677";
       ctx.font = "13px monospace";
       ctx.textAlign = "center";
       ctx.fillText("Waiting for data...", W / 2, H / 2);
@@ -82,12 +81,12 @@ export default function CenterChart({
 
     const yPrice = (p: number) => padding.top + chartH - ((p - low) / range) * chartH;
 
-    // Background
-    ctx.fillStyle = "#fcfaf7";
+    // Background — pure dark
+    ctx.fillStyle = "#0a0e14";
     ctx.fillRect(0, 0, W, H);
 
-    // Grid lines - subtle
-    ctx.strokeStyle = "rgba(224, 218, 208, 0.5)";
+    // Grid lines — subtle dark blue
+    ctx.strokeStyle = "rgba(26, 35, 50, 0.6)";
     ctx.lineWidth = 0.5;
     for (let i = 0; i <= 8; i++) {
       const y = padding.top + (chartH / 8) * i;
@@ -97,7 +96,7 @@ export default function CenterChart({
       ctx.stroke();
 
       const price = high - (range / 8) * i;
-      ctx.fillStyle = "#b5ab9c";
+      ctx.fillStyle = "#556677";
       ctx.font = "9px 'SF Mono', monospace";
       ctx.textAlign = "right";
       ctx.fillText(
@@ -107,30 +106,30 @@ export default function CenterChart({
       );
     }
 
-    // FVG Zones
+    // FVG Zones — subtle green
     for (const zone of data.fvgZones) {
       const y1 = yPrice(zone.high);
       const y2 = yPrice(zone.low);
-      ctx.fillStyle = "rgba(122, 158, 122, 0.06)";
+      ctx.fillStyle = "rgba(0, 255, 65, 0.04)";
       ctx.fillRect(padding.left, Math.min(y1, y2), chartW, Math.abs(y2 - y1));
-      ctx.strokeStyle = "rgba(122, 158, 122, 0.2)";
+      ctx.strokeStyle = "rgba(0, 255, 65, 0.15)";
       ctx.lineWidth = 0.5;
       ctx.setLineDash([2, 3]);
       ctx.strokeRect(padding.left, Math.min(y1, y2), chartW, Math.abs(y2 - y1));
       ctx.setLineDash([]);
-      ctx.fillStyle = "rgba(122, 158, 122, 0.4)";
+      ctx.fillStyle = "rgba(0, 255, 65, 0.4)";
       ctx.font = "8px 'SF Mono', monospace";
       ctx.textAlign = "left";
       ctx.fillText("FVG", padding.left + 4, Math.min(y1, y2) - 2);
     }
 
-    // Order Blocks
+    // Order Blocks — subtle red
     for (const zone of data.orderBlocks) {
       const y1 = yPrice(zone.high);
       const y2 = yPrice(zone.low);
-      ctx.fillStyle = "rgba(196, 106, 106, 0.05)";
+      ctx.fillStyle = "rgba(255, 51, 85, 0.04)";
       ctx.fillRect(padding.left, Math.min(y1, y2), chartW, Math.abs(y2 - y1));
-      ctx.fillStyle = "rgba(196, 106, 106, 0.4)";
+      ctx.fillStyle = "rgba(255, 51, 85, 0.4)";
       ctx.font = "8px 'SF Mono', monospace";
       ctx.textAlign = "left";
       ctx.fillText("OB", padding.left + 4, Math.max(y1, y2) + 10);
@@ -138,15 +137,15 @@ export default function CenterChart({
 
     // Premium/Discount zones
     const midpoint = (high + low) / 2;
-    ctx.fillStyle = "rgba(196, 154, 108, 0.015)";
+    ctx.fillStyle = "rgba(0, 212, 255, 0.015)";
     ctx.fillRect(padding.left, padding.top, chartW, chartH / 2);
-    ctx.fillStyle = "rgba(122, 158, 122, 0.015)";
+    ctx.fillStyle = "rgba(0, 255, 65, 0.015)";
     ctx.fillRect(padding.left, padding.top + chartH / 2, chartW, chartH / 2);
 
-    // Liquidity highs
+    // Liquidity highs — red dashed
     for (const lh of data.liquidityHighs) {
       const y = yPrice(lh);
-      ctx.strokeStyle = "rgba(196, 106, 106, 0.3)";
+      ctx.strokeStyle = "rgba(255, 51, 85, 0.3)";
       ctx.lineWidth = 1;
       ctx.setLineDash([3, 4]);
       ctx.beginPath();
@@ -154,16 +153,16 @@ export default function CenterChart({
       ctx.lineTo(W - padding.right, y);
       ctx.stroke();
       ctx.setLineDash([]);
-      ctx.fillStyle = "rgba(196, 106, 106, 0.4)";
+      ctx.fillStyle = "rgba(255, 51, 85, 0.4)";
       ctx.font = "7px 'SF Mono', monospace";
       ctx.textAlign = "right";
       ctx.fillText("SSL", W - padding.right - 4, y - 2);
     }
 
-    // Liquidity lows
+    // Liquidity lows — green dashed
     for (const ll of data.liquidityLows) {
       const y = yPrice(ll);
-      ctx.strokeStyle = "rgba(122, 158, 122, 0.3)";
+      ctx.strokeStyle = "rgba(0, 255, 65, 0.3)";
       ctx.lineWidth = 1;
       ctx.setLineDash([3, 4]);
       ctx.beginPath();
@@ -171,7 +170,7 @@ export default function CenterChart({
       ctx.lineTo(W - padding.right, y);
       ctx.stroke();
       ctx.setLineDash([]);
-      ctx.fillStyle = "rgba(122, 158, 122, 0.4)";
+      ctx.fillStyle = "rgba(0, 255, 65, 0.4)";
       ctx.font = "7px 'SF Mono', monospace";
       ctx.textAlign = "right";
       ctx.fillText("BSL", W - padding.right - 4, y - 2);
@@ -186,7 +185,7 @@ export default function CenterChart({
       const bodyH = Math.max(1, bodyBottom - bodyTop);
 
       // Wick
-      ctx.strokeStyle = isUp ? "rgba(122, 158, 122, 0.6)" : "rgba(196, 106, 106, 0.6)";
+      ctx.strokeStyle = isUp ? "rgba(0, 255, 65, 0.6)" : "rgba(255, 51, 85, 0.6)";
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.moveTo(x + candleW / 2, yPrice(candle.high));
@@ -194,21 +193,30 @@ export default function CenterChart({
       ctx.stroke();
 
       // Body
-      ctx.fillStyle = isUp ? "rgba(122, 158, 122, 0.8)" : "rgba(196, 106, 106, 0.8)";
+      ctx.fillStyle = isUp ? "rgba(0, 255, 65, 0.8)" : "rgba(255, 51, 85, 0.8)";
       ctx.fillRect(x, bodyTop, candleW, bodyH);
+
+      // Glow on close candle
+      if (i === visibleCandles.length - 1) {
+        ctx.shadowColor = isUp ? "rgba(0, 255, 65, 0.15)" : "rgba(255, 51, 85, 0.15)";
+        ctx.shadowBlur = 6;
+        ctx.fillStyle = isUp ? "rgba(0, 255, 65, 0.9)" : "rgba(255, 51, 85, 0.9)";
+        ctx.fillRect(x, bodyTop, candleW, bodyH);
+        ctx.shadowBlur = 0;
+      }
 
       // Volume
       const volY = padding.top + chartH + 2;
       const volMax = Math.max(...visibleCandles.map((c) => c.volume), 1);
       const volHt = (candle.volume / volMax) * volumeH;
-      ctx.fillStyle = isUp ? "rgba(122, 158, 122, 0.12)" : "rgba(196, 106, 106, 0.12)";
+      ctx.fillStyle = isUp ? "rgba(0, 255, 65, 0.12)" : "rgba(255, 51, 85, 0.12)";
       ctx.fillRect(x + 0.3, volY + volumeH - volHt, Math.max(1, candleW * 0.6), volHt);
     });
 
-    // Moving averages
+    // Moving averages — neon lines
     for (const period of [10, 20]) {
       ctx.beginPath();
-      ctx.strokeStyle = period === 10 ? "rgba(122, 158, 122, 0.4)" : "rgba(196, 154, 108, 0.3)";
+      ctx.strokeStyle = period === 10 ? "rgba(0, 255, 65, 0.4)" : "rgba(0, 212, 255, 0.3)";
       ctx.lineWidth = period === 10 ? 1.5 : 1;
 
       for (let i = period - 1; i < visibleCandles.length; i++) {
@@ -224,7 +232,7 @@ export default function CenterChart({
       const lastSlice = visibleCandles.slice(-period);
       const lastAvg = lastSlice.reduce((s, c) => s + c.close, 0) / period;
       const labelX = padding.left + (visibleCandles.length - 1) * (candleW + 0.8) + candleW + 4;
-      ctx.fillStyle = period === 10 ? "rgba(122, 158, 122, 0.5)" : "rgba(196, 154, 108, 0.4)";
+      ctx.fillStyle = period === 10 ? "rgba(0, 255, 65, 0.5)" : "rgba(0, 212, 255, 0.4)";
       ctx.font = "8px 'SF Mono', monospace";
       ctx.textAlign = "left";
       ctx.fillText(`SMA${period}`, labelX, yPrice(lastAvg) + 2);
@@ -235,7 +243,7 @@ export default function CenterChart({
     const recentLow = Math.min(...visibleCandles.slice(-20).map((c) => c.low));
     const midPrice = (recentHigh + recentLow) / 2;
     [recentHigh, recentLow, midPrice].forEach((level, idx) => {
-      ctx.strokeStyle = idx === 0 ? "rgba(196, 106, 106, 0.2)" : idx === 1 ? "rgba(122, 158, 122, 0.2)" : "rgba(181, 171, 156, 0.12)";
+      ctx.strokeStyle = idx === 0 ? "rgba(255, 51, 85, 0.2)" : idx === 1 ? "rgba(0, 255, 65, 0.2)" : "rgba(85, 102, 119, 0.12)";
       ctx.lineWidth = 0.5;
       ctx.setLineDash([6, 4]);
       ctx.beginPath();
@@ -243,7 +251,7 @@ export default function CenterChart({
       ctx.lineTo(W - padding.right, yPrice(level));
       ctx.stroke();
       ctx.setLineDash([]);
-      ctx.fillStyle = idx === 0 ? "rgba(196, 106, 106, 0.3)" : idx === 1 ? "rgba(122, 158, 122, 0.3)" : "rgba(181, 171, 156, 0.2)";
+      ctx.fillStyle = idx === 0 ? "rgba(255, 51, 85, 0.3)" : idx === 1 ? "rgba(0, 255, 65, 0.3)" : "rgba(85, 102, 119, 0.2)";
       ctx.font = "7px 'SF Mono', monospace";
       ctx.textAlign = "right";
       const label = idx === 0 ? "R" : idx === 1 ? "S" : "M";
@@ -253,11 +261,15 @@ export default function CenterChart({
     // Sweep markers
     for (const sweep of data.sweepPoints) {
       const y = yPrice(sweep.price);
-      const color = sweep.direction === "BUY" ? "#7a9e7a" : "#c46a6a";
+      const color = sweep.direction === "BUY" ? "#00ff41" : "#ff3355";
       ctx.fillStyle = color;
       ctx.beginPath();
       ctx.arc(W - padding.right - 14, y, 3.5, 0, Math.PI * 2);
       ctx.fill();
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 8;
+      ctx.fill();
+      ctx.shadowBlur = 0;
       ctx.strokeStyle = `${color}40`;
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -271,11 +283,11 @@ export default function CenterChart({
       const y1 = yPrice(zone.high);
       const y2 = yPrice(zone.low);
       const isBuy = data.decision.direction === "BUY";
-      const color = isBuy ? "rgba(122, 158, 122, 0.08)" : "rgba(196, 106, 106, 0.08)";
+      const color = isBuy ? "rgba(0, 255, 65, 0.06)" : "rgba(255, 51, 85, 0.06)";
       ctx.fillStyle = color;
       ctx.fillRect(padding.left, Math.min(y1, y2), chartW, Math.abs(y2 - y1));
 
-      ctx.strokeStyle = isBuy ? "rgba(122, 158, 122, 0.5)" : "rgba(196, 106, 106, 0.5)";
+      ctx.strokeStyle = isBuy ? "rgba(0, 255, 65, 0.5)" : "rgba(255, 51, 85, 0.5)";
       ctx.lineWidth = 1;
       ctx.setLineDash([6, 3]);
       const entryY = yPrice(zone.midpoint);
@@ -285,7 +297,7 @@ export default function CenterChart({
       ctx.stroke();
       ctx.setLineDash([]);
 
-      ctx.fillStyle = isBuy ? "rgba(122, 158, 122, 0.6)" : "rgba(196, 106, 106, 0.6)";
+      ctx.fillStyle = isBuy ? "rgba(0, 255, 65, 0.6)" : "rgba(255, 51, 85, 0.6)";
       ctx.font = "8px 'SF Mono', monospace";
       ctx.textAlign = "left";
       ctx.fillText(`Entry ${zone.midpoint.toFixed(1)}`, padding.left + 4, entryY - 3);
@@ -294,7 +306,7 @@ export default function CenterChart({
     // Stop loss
     if (data.decision && data.decision.status === "TRADE" && data.decision.stopLoss > 0) {
       const slY = yPrice(data.decision.stopLoss);
-      ctx.strokeStyle = "rgba(196, 106, 106, 0.5)";
+      ctx.strokeStyle = "rgba(255, 51, 85, 0.5)";
       ctx.lineWidth = 1;
       ctx.setLineDash([3, 3]);
       ctx.beginPath();
@@ -302,7 +314,7 @@ export default function CenterChart({
       ctx.lineTo(W - padding.right, slY);
       ctx.stroke();
       ctx.setLineDash([]);
-      ctx.fillStyle = "rgba(196, 106, 106, 0.5)";
+      ctx.fillStyle = "rgba(255, 51, 85, 0.5)";
       ctx.font = "8px 'SF Mono', monospace";
       ctx.textAlign = "left";
       ctx.fillText(`SL ${data.decision.stopLoss.toFixed(1)}`, padding.left + 4, slY + 10);
@@ -313,7 +325,7 @@ export default function CenterChart({
       [data.decision.takeProfit.tp1, data.decision.takeProfit.tp2, data.decision.takeProfit.tp3].forEach((tp, i) => {
         if (tp <= 0) return;
         const tpY = yPrice(tp);
-        ctx.strokeStyle = `rgba(122, 158, 122, ${0.2 + i * 0.1})`;
+        ctx.strokeStyle = `rgba(0, 255, 65, ${0.2 + i * 0.1})`;
         ctx.lineWidth = 0.5;
         ctx.setLineDash([3, 4]);
         ctx.beginPath();
@@ -321,16 +333,16 @@ export default function CenterChart({
         ctx.lineTo(W - padding.right, tpY);
         ctx.stroke();
         ctx.setLineDash([]);
-        ctx.fillStyle = `rgba(122, 158, 122, ${0.3 + i * 0.15})`;
+        ctx.fillStyle = `rgba(0, 255, 65, ${0.3 + i * 0.15})`;
         ctx.font = "8px 'SF Mono', monospace";
         ctx.textAlign = "left";
         ctx.fillText(`TP${i + 1} ${tp.toFixed(1)}`, padding.left + 4, tpY + 10);
       });
     }
 
-    // Current price line
+    // Current price line — bright green
     const currentY = yPrice(data.currentPrice);
-    ctx.strokeStyle = "rgba(44, 40, 34, 0.2)";
+    ctx.strokeStyle = "rgba(0, 255, 65, 0.35)";
     ctx.lineWidth = 0.5;
     ctx.setLineDash([4, 4]);
     ctx.beginPath();
@@ -339,26 +351,32 @@ export default function CenterChart({
     ctx.stroke();
     ctx.setLineDash([]);
 
-    ctx.fillStyle = "#2c2822";
+    ctx.fillStyle = "#00ff41";
     ctx.font = "10px 'SF Mono', monospace";
     ctx.textAlign = "right";
     const priceText = data.currentPrice.toFixed(data.activeSymbol === "XAUUSD" ? 1 : 2);
     ctx.fillText(priceText, W - padding.right - 4, currentY - 4);
 
     // Top info
-    ctx.fillStyle = "#8a8070";
+    ctx.fillStyle = "#556677";
     ctx.font = "9px 'SF Mono', monospace";
     ctx.textAlign = "left";
     ctx.fillText(`${data.activeSymbol} • ${selectedTimeframe} • ${visibleCandles.length} candles`, padding.left, 16);
+
+    // Current price in top right
+    ctx.fillStyle = "#00ff41";
+    ctx.font = "bold 11px 'SF Mono', monospace";
+    ctx.textAlign = "right";
+    ctx.fillText(priceText, W - padding.right, 16);
 
     // RSI Panel
     if (showRSI) {
       const rsiBase = padding.top + chartH + volumeH + 8;
       const rsiValues = calculateRSI(visibleCandles, 14);
-      ctx.fillStyle = "rgba(240, 236, 230, 0.5)";
+      ctx.fillStyle = "rgba(10, 14, 20, 0.8)";
       ctx.fillRect(padding.left, rsiBase, chartW, rsiH);
 
-      ctx.strokeStyle = "rgba(224, 218, 208, 0.5)";
+      ctx.strokeStyle = "rgba(26, 35, 50, 0.6)";
       ctx.lineWidth = 0.5;
       [30, 50, 70].forEach((level) => {
         const y = rsiBase + rsiH - (level / 100) * rsiH;
@@ -366,7 +384,7 @@ export default function CenterChart({
         ctx.moveTo(padding.left, y);
         ctx.lineTo(W - padding.right, y);
         ctx.stroke();
-        ctx.fillStyle = "rgba(181, 171, 156, 0.3)";
+        ctx.fillStyle = "rgba(85, 102, 119, 0.3)";
         ctx.font = "7px 'SF Mono', monospace";
         ctx.textAlign = "right";
         ctx.fillText(`${level}`, W - padding.right - 2, y + 2);
@@ -374,7 +392,7 @@ export default function CenterChart({
 
       if (rsiValues.length > 1) {
         ctx.beginPath();
-        ctx.strokeStyle = "rgba(122, 158, 122, 0.6)";
+        ctx.strokeStyle = "rgba(0, 212, 255, 0.6)";
         ctx.lineWidth = 1;
         for (let i = 0; i < rsiValues.length; i++) {
           const x = padding.left + (i / Math.max(rsiValues.length - 1, 1)) * chartW;
@@ -384,7 +402,7 @@ export default function CenterChart({
         }
         ctx.stroke();
         const lastRSI = rsiValues[rsiValues.length - 1];
-        ctx.fillStyle = lastRSI > 70 ? "rgba(196, 106, 106, 0.6)" : lastRSI < 30 ? "rgba(122, 158, 122, 0.6)" : "rgba(122, 158, 122, 0.6)";
+        ctx.fillStyle = lastRSI > 70 ? "rgba(255, 51, 85, 0.6)" : lastRSI < 30 ? "rgba(0, 255, 65, 0.6)" : "rgba(0, 212, 255, 0.6)";
         ctx.font = "8px 'SF Mono', monospace";
         ctx.textAlign = "left";
         ctx.fillText(`RSI ${lastRSI.toFixed(1)}`, padding.left + 4, rsiBase + 12);
@@ -400,9 +418,9 @@ export default function CenterChart({
   }, [draw]);
 
   return (
-    <div className="h-full flex flex-col bg-[#fcfaf7]">
+    <div className="h-full flex flex-col bg-[#0a0e14]">
       {/* Toolbar */}
-      <div className="h-9 bg-[#f8f6f2] border-b border-[#e0dad0] flex items-center justify-between px-3 shrink-0">
+      <div className="h-9 bg-[#05080e] border-b border-[#1a2332] flex items-center justify-between px-3 shrink-0">
         <div className="flex items-center gap-0.5">
           {TIMEFRAMES.map((tf) => (
             <button
@@ -410,8 +428,8 @@ export default function CenterChart({
               onClick={() => onTimeframeChange(tf)}
               className={`px-2 py-1 text-[9px] font-medium transition-all ${
                 selectedTimeframe === tf
-                  ? "text-[#2c2822] bg-white border-b-2 border-b-[#2c2822]"
-                  : "text-[#8a8070] hover:text-[#2c2822]"
+                  ? "text-[#00ff41] bg-[#00ff41]/10 border-b-2 border-b-[#00ff41]"
+                  : "text-[#556677] hover:text-white"
               }`}
             >
               {tf}
@@ -426,8 +444,8 @@ export default function CenterChart({
               onClick={() => onSymbolChange?.(sym)}
               className={`px-1.5 py-1 text-[9px] font-medium transition-all ${
                 data.activeSymbol === sym
-                  ? "text-[#2c2822] bg-white"
-                  : "text-[#8a8070] hover:text-[#2c2822]"
+                  ? "text-[#00ff41] bg-[#00ff41]/10"
+                  : "text-[#556677] hover:text-white"
               }`}
             >
               {sym}
@@ -439,7 +457,7 @@ export default function CenterChart({
           <button
             onClick={() => setShowRSI(!showRSI)}
             className={`px-1.5 py-1 text-[9px] transition-all ${
-              showRSI ? "text-[#2c2822] bg-white" : "text-[#8a8070] hover:text-[#2c2822]"
+              showRSI ? "text-[#00d4ff] bg-[#00d4ff]/10" : "text-[#556677] hover:text-white"
             }`}
           >
             RSI
@@ -447,7 +465,7 @@ export default function CenterChart({
           <button
             onClick={() => setShowMACD(!showMACD)}
             className={`px-1.5 py-1 text-[9px] transition-all ${
-              showMACD ? "text-[#2c2822] bg-white" : "text-[#8a8070] hover:text-[#2c2822]"
+              showMACD ? "text-[#00d4ff] bg-[#00d4ff]/10" : "text-[#556677] hover:text-white"
             }`}
           >
             MACD
@@ -465,18 +483,18 @@ export default function CenterChart({
       </div>
 
       {/* Bottom indicator bar */}
-      <div className="h-5 bg-[#f8f6f2] border-t border-[#e0dad0] flex items-center justify-between px-3 shrink-0">
-        <div className="flex items-center gap-3 text-[8px] text-[#b5ab9c]">
+      <div className="h-5 bg-[#05080e] border-t border-[#1a2332] flex items-center justify-between px-3 shrink-0">
+        <div className="flex items-center gap-3 text-[8px] text-[#556677]">
           <span>O: {data.candles.length > 0 ? data.candles[data.candles.length - 1].open.toFixed(2) : "—"}</span>
           <span>H: {data.candles.length > 0 ? data.candles[data.candles.length - 1].high.toFixed(2) : "—"}</span>
           <span>L: {data.candles.length > 0 ? data.candles[data.candles.length - 1].low.toFixed(2) : "—"}</span>
           <span>C: {data.candles.length > 0 ? data.candles[data.candles.length - 1].close.toFixed(2) : "—"}</span>
         </div>
-        <div className="flex items-center gap-2 text-[8px] text-[#b5ab9c]">
-          <span>FVG</span>
-          <span>OB</span>
-          <span>MSS</span>
-          <span>Liq</span>
+        <div className="flex items-center gap-2 text-[8px] text-[#556677]">
+          <span className="text-[#00ff41]/70">FVG</span>
+          <span className="text-[#ff3355]/70">OB</span>
+          <span className="text-[#00d4ff]/70">MSS</span>
+          <span className="text-[#ffffff]/70">Liq</span>
         </div>
       </div>
     </div>

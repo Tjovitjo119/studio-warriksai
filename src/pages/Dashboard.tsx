@@ -340,7 +340,7 @@ export default function Dashboard() {
   const showFullLayout = activeNav === "dashboard" || activeNav === "signals";
 
   return (
-    <div className="min-h-screen bg-[#f8f6f2] flex flex-col overflow-hidden">
+    <div className="min-h-screen bg-[#000000] flex flex-col overflow-hidden">
       {/* Top Navigation Bar */}
       <TopBar
         markets={markets}
@@ -400,7 +400,7 @@ export default function Dashboard() {
         ) : (
           /* Trading Layout: Center Chart + Right Panel */
           <>
-            <div className="flex-1 flex flex-col min-w-0 bg-white border-r border-[#e0dad0]">
+            <div className="flex-1 flex flex-col min-w-0 bg-[#0a0e14] border-r border-[#1a2332]">
               <div className="flex-1 min-h-0">
                 <CenterChart
                   data={chartData}
@@ -409,14 +409,14 @@ export default function Dashboard() {
                   onTimeframeChange={setSelectedTimeframe}
                 />
               </div>
-              <div className="h-[130px] shrink-0 border-t border-[#e0dad0]">
+              <div className="h-[130px] shrink-0 border-t border-[#1a2332]">
                 <MultiTimeframeGrid
                   candlesMap={candlesMap}
                   symbol={activeSymbol}
                 />
               </div>
             </div>
-            <div className="w-[300px] shrink-0 border-l border-[#e0dad0] overflow-hidden bg-[#fcfaf7]">
+            <div className="w-[300px] shrink-0 border-l border-[#1a2332] overflow-hidden bg-[#0a0e14]">
               <RightPanel
                 signals={filteredSignals}
                 multiStrategy={multiStrategy}
@@ -435,7 +435,7 @@ export default function Dashboard() {
 
       {/* Bottom Analytics — compact */}
       {showFullLayout && (
-        <div className="h-[120px] shrink-0 border-t border-[#e0dad0] bg-white">
+        <div className="h-[120px] shrink-0 border-t border-[#1a2332] bg-[#05080e]">
           <BottomAnalytics
             trades={trades}
             markets={markets}
@@ -448,56 +448,56 @@ export default function Dashboard() {
       )}
 
       {/* Status Bar — with precise NO_TRADE reasons */}
-      <footer className="h-8 bg-white border-t border-[#e0dad0] flex items-center justify-between px-3 shrink-0">
+      <footer className="h-8 bg-[#05080e] border-t border-[#1a2332] flex items-center justify-between px-3 shrink-0">
         <div className="flex items-center gap-3 overflow-hidden">
-          <span className="text-[8px] text-[#b5ab9c] tracking-wider shrink-0">WARRIKS v5.1</span>
-          <span className="w-px h-2.5 bg-[#e0dad0] shrink-0" />
+          <span className="text-[8px] text-[#556677] tracking-wider shrink-0">WARRIKS v5.1</span>
+          <span className="w-px h-2.5 bg-[#1a2332] shrink-0" />
           
           {/* Decision Status — precise reason */}
           {lastDecision && (
             <>
               <span className={`text-[8px] font-semibold shrink-0 flex items-center gap-1 ${
-                lastDecision.status === "TRADE" ? "text-[#7a9e7a]" : "text-[#c46a6a]"
+                lastDecision.status === "TRADE" ? "text-[#00ff41]" : "text-[#ff3355]"
               }`}>
                 {lastDecision.status === "TRADE" ? <CheckCircle className="w-2.5 h-2.5" /> : <XCircle className="w-2.5 h-2.5" />}
                 {lastDecision.status === "TRADE" ? `TRADE ${lastDecision.direction}` : "NO TRADE"}
               </span>
-              <span className="text-[7px] text-[#8a8070] truncate max-w-[280px]">
+              <span className="text-[7px] text-[#556677] truncate max-w-[280px]">
                 {lastDecision.reason}
               </span>
-              <span className="w-px h-2.5 bg-[#e0dad0] shrink-0" />
+              <span className="w-px h-2.5 bg-[#1a2332] shrink-0" />
             </>
           )}
           
-          <span className={`text-[8px] shrink-0 ${lastDecision?.confluenceScore && lastDecision.confluenceScore >= 85 ? "text-[#7a9e7a]" : "text-[#b5ab9c]"}`}>
+          <span className={`text-[8px] shrink-0 ${lastDecision?.confluenceScore && lastDecision.confluenceScore >= 85 ? "text-[#00ff41]" : "text-[#556677]"}`}>
             Conf: {lastDecision?.confluenceScore || 0}
           </span>
-          <span className="w-px h-2.5 bg-[#e0dad0] shrink-0" />
-          <span className={`text-[8px] shrink-0 ${multiStrategy?.agreement === "STRONG" ? "text-[#7a9e7a]" : multiStrategy?.agreement === "CONFLICT" ? "text-[#c46a6a]" : "text-[#c49a6c]"}`}>
+          <span className="w-px h-2.5 bg-[#1a2332] shrink-0" />
+          <span className={`text-[8px] shrink-0 ${multiStrategy?.agreement === "STRONG" ? "text-[#00ff41]" : multiStrategy?.agreement === "CONFLICT" ? "text-[#ff3355]" : "text-[#ffaa00]"}`}>
             Strat: {multiStrategy?.agreement || "—"} ({multiStrategy?.buyVotes || 0}▲/{multiStrategy?.sellVotes || 0}▼)
           </span>
-          <span className="w-px h-2.5 bg-[#e0dad0] shrink-0" />
+          <span className="w-px h-2.5 bg-[#1a2332] shrink-0" />
           <span className="text-[8px] shrink-0">
             {sessionInfo.inKillzone ? (
-              <span className="text-[#7a9e7a]">● {sessionInfo.currentKillzone}</span>
+              <span className="text-[#00ff41]">● {sessionInfo.currentKillzone}</span>
             ) : (
-              <span className="text-[#c46a6a]">○ {sessionInfo.currentKillzone} {sessionInfo.nextKillzoneTime ? `→ ${sessionInfo.nextKillzoneTime}` : ''}</span>
+              <span className="text-[#ff3355]">○ {sessionInfo.currentKillzone} {sessionInfo.nextKillzoneTime ? `→ ${sessionInfo.nextKillzoneTime}` : ''}</span>
             )}
           </span>
           
           {/* Combination engine summary */}
           {combinationSummary && (
             <>
-              <span className="w-px h-2.5 bg-[#e0dad0] shrink-0" />
-              <span className={`text-[8px] shrink-0 ${combinationSummary.tradeable ? "text-[#7a9e7a]" : "text-[#c46a6a]"}`}>
+              <span className="w-px h-2.5 bg-[#1a2332] shrink-0" />
+              <span className={`text-[8px] shrink-0 ${combinationSummary.tradeable ? "text-[#00ff41]" : "text-[#ff3355]"}`}>
                 6E: {combinationSummary.activeEngines}/6 {combinationSummary.agreementLabel}
               </span>
             </>
           )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[8px] text-[#b5ab9c]">{user?.name || user?.email || "Trader"}</span>
-          <span className="w-1.5 h-1.5 rounded-full bg-[#7a9e7a]" />
+          <span className="text-[8px] text-[#556677]">{user?.name || user?.email || "Trader"}</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-[#00ff41] shadow-[0_0_6px_rgba(0,255,65,0.5)]" />
         </div>
       </footer>
     </div>

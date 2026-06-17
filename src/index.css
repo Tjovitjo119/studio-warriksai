@@ -1,7 +1,7 @@
 /* ============================================================================
- * WARRIKS AI — Studio Edition
- * Gallery-clean, refined editorial aesthetic
- * Warm off-whites • Thin framing • Muted neutrals • Soft spacing
+ * WARRIKS AI — N.E.O.N. Edition
+ * Black background · Lime green & cyan accents · Dark blue depth · White clarity
+ * Premium terminal-dump scrolling experience
  * ============================================================================ */
 
 @import "tailwindcss";
@@ -46,131 +46,96 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --color-stone-50: #faf8f5;
-  --color-stone-100: #f5f2ed;
-  --color-stone-200: #e8e3da;
-  --color-stone-300: #d4cdc2;
-  --color-stone-400: #b5ab9c;
-  --color-stone-500: #988e7e;
-  --color-stone-600: #7a7163;
-  --color-stone-700: #5d5549;
-  --color-stone-800: #3e3830;
-  --color-stone-900: #221f1a;
-  --color-stone-950: #12100c;
+  /* Neon palette tokens */
+  --color-neon-green: #00ff41;
+  --color-neon-cyan: #00d4ff;
+  --color-neon-blue: #1a6bff;
+  --color-dark-blue: #0a1628;
+  --color-deep-blue: #0d1b2a;
+  --color-surface: #0d1117;
+  --color-surface-2: #161b22;
+  --color-border-neon: #1a2332;
 }
 
 /* ============================================================================
- * CSS Custom Properties — Studio Palette
+ * CSS Custom Properties — N.E.O.N. Palette
  * ============================================================================ */
 :root {
-  --radius: 2px;
+  --radius: 0px;
 
-  /* Warm off-white background */
-  --background: #f8f6f2;
-  --foreground: #2c2822;
+  /* Black foundation */
+  --background: #000000;
+  --foreground: #e8edf5;
 
-  /* Cards: slightly lighter than bg, subtle separation */
-  --card: #fcfaf7;
-  --card-foreground: #2c2822;
+  /* Deep dark blue-black surfaces */
+  --card: #0a0e14;
+  --card-foreground: #e8edf5;
 
-  --popover: #fcfaf7;
-  --popover-foreground: #2c2822;
+  --popover: #0d1117;
+  --popover-foreground: #e8edf5;
 
-  /* Primary: a refined warm charcoal */
-  --primary: #2c2822;
-  --primary-foreground: #f8f6f2;
+  /* Primary: lime green */
+  --primary: #00ff41;
+  --primary-foreground: #000000;
 
-  /* Secondary: warm stone */
-  --secondary: #e8e3da;
-  --secondary-foreground: #5d5549;
+  /* Secondary: deep blue */
+  --secondary: #0d1b2a;
+  --secondary-foreground: #00d4ff;
 
-  /* Muted: soft warm gray */
-  --muted: #f0ece6;
-  --muted-foreground: #8a8070;
+  /* Muted: dark subtle */
+  --muted: #161b22;
+  --muted-foreground: #556677;
 
-  /* Accent: warm taupe */
-  --accent: #e8e3da;
-  --accent-foreground: #3e3830;
+  /* Accent: cyan */
+  --accent: #00d4ff;
+  --accent-foreground: #000000;
 
-  /* Destructive: muted brick red */
-  --destructive: #c4624a;
-  --destructive-foreground: #fcfaf7;
+  /* Destructive: neon red */
+  --destructive: #ff3355;
+  --destructive-foreground: #000000;
 
-  /* Borders: very thin, subtle */
-  --border: #e0dad0;
-  --input: #e0dad0;
-  --ring: #b5ab9c;
+  /* Borders: subtle blue-gray */
+  --border: #1a2332;
+  --input: #1a2332;
+  --ring: #00ff41;
 
-  /* Chart colors: soft, editorial */
-  --chart-1: #7a9e7a;
-  --chart-2: #c49a6c;
-  --chart-3: #8a9bb5;
-  --chart-4: #c46a6a;
-  --chart-5: #6a8a7a;
+  /* Chart colors: neon spectrum */
+  --chart-1: #00ff41;
+  --chart-2: #00d4ff;
+  --chart-3: #1a6bff;
+  --chart-4: #ff3355;
+  --chart-5: #ffaa00;
 
-  /* Sidebar: warm stone */
-  --sidebar: #f0ece6;
-  --sidebar-foreground: #3e3830;
-  --sidebar-primary: #2c2822;
-  --sidebar-primary-foreground: #f8f6f2;
-  --sidebar-accent: #e3ddd4;
-  --sidebar-accent-foreground: #3e3830;
-  --sidebar-border: #ddd6cb;
-  --sidebar-ring: #b5ab9c;
+  /* Sidebar: deep dark */
+  --sidebar: #05080e;
+  --sidebar-foreground: #e8edf5;
+  --sidebar-primary: #00ff41;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #0d1b2a;
+  --sidebar-accent-foreground: #00d4ff;
+  --sidebar-border: #1a2332;
+  --sidebar-ring: #00ff41;
 
-  /* Studio-specific tokens */
-  --studio-bg: #f8f6f2;
-  --studio-card: #fcfaf7;
-  --studio-border: #e0dad0;
-  --studio-border-light: #e8e3da;
-  --studio-text: #2c2822;
-  --studio-text-secondary: #8a8070;
-  --studio-text-muted: #b5ab9c;
-  --studio-tag-bg: #f0ece6;
-  --studio-hover: #f3f0ea;
-  --studio-accent-green: #7a9e7a;
-  --studio-accent-red: #c46a6a;
-  --studio-accent-gold: #c49a6c;
-  --studio-accent-blue: #7a9bb5;
-}
-
-.dark {
-  --background: #1a1815;
-  --foreground: #e8e3da;
-  --card: #24211c;
-  --card-foreground: #e8e3da;
-  --popover: #24211c;
-  --popover-foreground: #e8e3da;
-  --primary: #e8e3da;
-  --primary-foreground: #1a1815;
-  --secondary: #2c2822;
-  --secondary-foreground: #b5ab9c;
-  --muted: #2c2822;
-  --muted-foreground: #8a8070;
-  --accent: #3e3830;
-  --accent-foreground: #e8e3da;
-  --destructive: #c46a4a;
-  --border: #3e3830;
-  --input: #3e3830;
-  --ring: #7a7163;
-  --chart-1: #7a9e7a;
-  --chart-2: #c49a6c;
-  --chart-3: #8a9bb5;
-  --chart-4: #c46a6a;
-  --chart-5: #6a8a7a;
-  --sidebar: #1a1815;
-  --sidebar-foreground: #e8e3da;
-  --sidebar-primary: #e8e3da;
-  --sidebar-primary-foreground: #1a1815;
-  --sidebar-accent: #2c2822;
-  --sidebar-accent-foreground: #e8e3da;
-  --sidebar-border: #3e3830;
-  --sidebar-ring: #7a7163;
+  /* Neon-specific tokens */
+  --neon-green: #00ff41;
+  --neon-cyan: #00d4ff;
+  --neon-blue: #1a6bff;
+  --dark-blue: #0a1628;
+  --deep-blue: #0d1b2a;
+  --surface: #0d1117;
+  --surface-2: #161b22;
+  --border-neon: #1a2332;
+  --neon-glow-green: 0 0 6px rgba(0, 255, 65, 0.3), 0 0 12px rgba(0, 255, 65, 0.1);
+  --neon-glow-cyan: 0 0 6px rgba(0, 212, 255, 0.3), 0 0 12px rgba(0, 212, 255, 0.1);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
+  }
+
+  html {
+    scroll-behavior: smooth;
   }
 
   body {
@@ -184,6 +149,30 @@
   button:not([disabled]),
   [role="button"]:not([disabled]) {
     cursor: pointer;
+  }
+
+  /* Smooth scroll */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #05080e;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #1a2332;
+    border-radius: 0;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #00ff41;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #1a2332 #05080e;
   }
 }
 
@@ -205,76 +194,67 @@
 }
 
 /* ============================================================================
- * Studio Panel — Thin, refined card with hairline border
+ * Neon Glass Panel — Dark translucent with neon border
  * ============================================================================ */
-.studio-panel {
-  background: var(--studio-card);
-  border: 1px solid var(--studio-border);
-  transition: border-color 0.2s ease, background 0.2s ease;
+.neon-panel {
+  background: rgba(10, 14, 20, 0.85);
+  border: 1px solid var(--border-neon);
+  backdrop-filter: blur(8px);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
-.studio-panel:hover {
-  border-color: #ccc4b8;
-  background: #fdfcf9;
+.neon-panel:hover {
+  border-color: rgba(0, 255, 65, 0.25);
+  box-shadow: 0 0 12px rgba(0, 255, 65, 0.06);
 }
 
-.studio-card {
-  background: var(--studio-card);
-  border: 1px solid var(--studio-border);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+.neon-card {
+  background: rgba(13, 17, 23, 0.9);
+  border: 1px solid var(--border-neon);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.studio-card:hover {
-  border-color: #d4cdc2;
+.neon-card:hover {
+  border-color: rgba(0, 212, 255, 0.2);
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.04);
 }
 
 /* ============================================================================
- * Price & Direction Styles (Studio)
+ * Glass UI Helpers
+ * ============================================================================ */
+.glass-card {
+  background: rgba(10, 14, 20, 0.85);
+  border: 1px solid var(--border-neon);
+  backdrop-filter: blur(12px);
+}
+
+.glass-surface {
+  background: rgba(13, 17, 23, 0.7);
+  border: 1px solid #1a2332;
+  backdrop-filter: blur(8px);
+}
+
+/* ============================================================================
+ * Price & Direction Styles (Neon)
  * ============================================================================ */
 .price-up {
-  color: #7a9e7a;
+  color: #00ff41;
 }
 
 .price-down {
-  color: #c46a6a;
+  color: #ff3355;
 }
 
 .price-neutral {
-  color: #b5ab9c;
+  color: #556677;
 }
 
 .bg-up {
-  background: rgba(122, 158, 122, 0.08);
+  background: rgba(0, 255, 65, 0.06);
 }
 
 .bg-down {
-  background: rgba(196, 106, 106, 0.08);
-}
-
-/* ============================================================================
- * Custom Scrollbar — Minimal
- * ============================================================================ */
-::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: rgba(181, 171, 156, 0.3);
-  border-radius: 0;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(181, 171, 156, 0.5);
-}
-
-* {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(181, 171, 156, 0.3) transparent;
+  background: rgba(255, 51, 85, 0.06);
 }
 
 /* ============================================================================
@@ -286,29 +266,59 @@
 }
 
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(4px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slide-down {
-  from { opacity: 0; transform: translateY(-4px); }
+  from { opacity: 0; transform: translateY(-8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 4px rgba(0, 255, 65, 0.2); }
+  50% { box-shadow: 0 0 12px rgba(0, 255, 65, 0.5); }
+}
+
+@keyframes scan-line {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes matrix-rain {
+  0% { opacity: 0; transform: translateY(-20px); }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(20px); }
+}
+
 .animate-fade-in {
-  animation: fade-in 0.3s ease;
+  animation: fade-in 0.4s ease;
 }
 
 .animate-slide-up {
-  animation: slide-up 0.3s ease;
+  animation: slide-up 0.5s ease;
 }
 
 .animate-slide-down {
-  animation: slide-down 0.3s ease;
+  animation: slide-down 0.4s ease;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
 }
 
 /* ============================================================================
- * Status Indicators (Studio)
+ * Status Indicators (Neon)
  * ============================================================================ */
 .status-dot {
   width: 6px;
@@ -318,42 +328,46 @@
 }
 
 .status-dot.online {
-  background: #7a9e7a;
+  background: #00ff41;
+  box-shadow: 0 0 6px rgba(0, 255, 65, 0.5);
 }
 
 .status-dot.offline {
-  background: #d4cdc2;
+  background: #556677;
 }
 
 .status-dot.warning {
-  background: #c49a6c;
+  background: #ffaa00;
+  box-shadow: 0 0 6px rgba(255, 170, 0, 0.5);
 }
 
 .status-dot.error {
-  background: #c46a6a;
+  background: #ff3355;
+  box-shadow: 0 0 6px rgba(255, 51, 85, 0.5);
 }
 
 /* ============================================================================
- * Button styles (Studio)
+ * Button styles (Neon)
  * ============================================================================ */
 .btn-ghost {
   background: transparent;
   border: none;
-  color: var(--studio-text-secondary);
+  color: var(--muted-foreground);
   transition: color 0.15s ease, background 0.15s ease;
   padding: 4px 8px;
   font-size: 11px;
-  border-radius: 2px;
+  border-radius: 0;
 }
 
 .btn-ghost:hover {
-  color: var(--studio-text);
-  background: var(--studio-hover);
+  color: var(--neon-green);
+  background: rgba(0, 255, 65, 0.06);
 }
 
 .btn-ghost.active {
-  color: var(--studio-text);
-  background: var(--studio-tag-bg);
+  color: var(--neon-green);
+  background: rgba(0, 255, 65, 0.08);
+  border-left: 2px solid var(--neon-green);
 }
 
 /* ============================================================================
@@ -372,12 +386,12 @@
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--studio-text-secondary);
+  color: var(--muted-foreground);
   font-weight: 600;
 }
 
 /* ============================================================================
- * Nav Item Styles (Studio)
+ * Nav Item Styles (Neon)
  * ============================================================================ */
 .nav-item {
   display: flex;
@@ -385,27 +399,27 @@
   gap: 8px;
   padding: 6px 10px;
   font-size: 11px;
-  color: var(--studio-text-secondary);
+  color: var(--muted-foreground);
   transition: all 0.15s ease;
   border-left: 2px solid transparent;
 }
 
 .nav-item:hover {
-  color: var(--studio-text);
-  background: var(--studio-hover);
+  color: var(--neon-green);
+  background: rgba(0, 255, 65, 0.04);
 }
 
 .nav-item.active {
-  color: var(--studio-text);
-  background: var(--studio-tag-bg);
-  border-left-color: var(--studio-text);
+  color: #ffffff;
+  background: rgba(0, 255, 65, 0.06);
+  border-left-color: var(--neon-green);
 }
 
 /* ============================================================================
  * Content Area
  * ============================================================================ */
 .content-area {
-  background: var(--studio-bg);
+  background: var(--background);
 }
 
 /* ============================================================================
@@ -416,16 +430,68 @@
 }
 
 /* ============================================================================
- * Gradients (Studio)
+ * Gradients (Neon)
  * ============================================================================ */
 .gradient-primary {
-  background: linear-gradient(135deg, #2c2822 0%, #3e3830 100%);
+  background: linear-gradient(135deg, #00ff41 0%, #00d4ff 100%);
 }
 
 .gradient-green {
-  background: linear-gradient(135deg, #7a9e7a 0%, #6a8e6a 100%);
+  background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%);
 }
 
-.gradient-gold {
-  background: linear-gradient(135deg, #c49a6c 0%, #b5895c 100%);
+.gradient-cyan {
+  background: linear-gradient(135deg, #00d4ff 0%, #1a6bff 100%);
+}
+
+.gradient-blue {
+  background: linear-gradient(135deg, #1a6bff 0%, #0a1628 100%);
+}
+
+.gradient-red {
+  background: linear-gradient(135deg, #ff3355 0%, #cc1133 100%);
+}
+
+/* ============================================================================
+ * Neon Text Glow
+ * ============================================================================ */
+.text-glow-green {
+  text-shadow: 0 0 8px rgba(0, 255, 65, 0.5), 0 0 20px rgba(0, 255, 65, 0.2);
+}
+
+.text-glow-cyan {
+  text-shadow: 0 0 8px rgba(0, 212, 255, 0.5), 0 0 20px rgba(0, 212, 255, 0.2);
+}
+
+.text-glow-blue {
+  text-shadow: 0 0 8px rgba(26, 107, 255, 0.5), 0 0 20px rgba(26, 107, 255, 0.2);
+}
+
+/* ============================================================================
+ * Scanline overlay (for terminal-dump feel)
+ * ============================================================================ */
+.scanlines::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 255, 65, 0.02) 2px,
+    rgba(0, 255, 65, 0.02) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ============================================================================
+ * Selection
+ * ============================================================================ */
+::selection {
+  background: rgba(0, 255, 65, 0.2);
+  color: #ffffff;
 }

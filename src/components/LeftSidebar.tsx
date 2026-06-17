@@ -1,6 +1,6 @@
 // ============================================================================
-// WARRIKS AI — Studio Left Sidebar
-// Clean navigation with warm neutrals and thin framing
+// WARRIKS AI — N.E.O.N. Left Sidebar
+// Dark depths, neon green active states, cyan accents
 // ============================================================================
 
 import { useState } from "react";
@@ -47,7 +47,7 @@ export default function LeftSidebar({ activeNav, onNavChange }: LeftSidebarProps
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className={`h-full flex flex-col bg-[#f0ece6] border-r border-[#ddd6cb] transition-all duration-200 shrink-0 ${
+    <div className={`h-full flex flex-col bg-[#05080e] border-r border-[#1a2332] transition-all duration-200 shrink-0 ${
       collapsed ? "w-[42px]" : "w-[180px]"
     }`}>
       {/* Nav Items */}
@@ -61,12 +61,12 @@ export default function LeftSidebar({ activeNav, onNavChange }: LeftSidebarProps
               onClick={() => onNavChange(item.id)}
               className={`w-full flex items-center gap-2 px-3 py-1.5 text-[10px] transition-all border-l-2 ${
                 isActive
-                  ? "text-[#2c2822] bg-white border-l-[#2c2822]"
-                  : "text-[#8a8070] hover:text-[#2c2822] hover:bg-white/50 border-l-transparent"
+                  ? "text-white bg-[#00ff41]/5 border-l-[#00ff41]"
+                  : "text-[#556677] hover:text-[#00ff41] hover:bg-[#00ff41]/[0.03] border-l-transparent"
               }`}
               title={collapsed ? item.label : undefined}
             >
-              <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-[#2c2822]" : ""}`} />
+              <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-[#00ff41]" : ""}`} />
               {!collapsed && <span className="truncate">{item.label}</span>}
             </button>
           );
@@ -74,12 +74,12 @@ export default function LeftSidebar({ activeNav, onNavChange }: LeftSidebarProps
       </div>
 
       {/* Divider */}
-      <div className="border-t border-[#ddd6cb] my-1" />
+      <div className="border-t border-[#1a2332] my-1" />
 
       {/* Engine Status */}
       {!collapsed && (
         <div className="px-3 py-2">
-          <div className="text-[8px] text-[#b5ab9c] tracking-[0.1em] mb-2 uppercase font-medium">
+          <div className="text-[8px] text-[#556677] tracking-[0.1em] mb-2 uppercase font-medium">
             Engine Status
           </div>
           {[
@@ -90,9 +90,9 @@ export default function LeftSidebar({ activeNav, onNavChange }: LeftSidebarProps
             { name: "Probability Engine", status: "online" },
           ].map((engine) => (
             <div key={engine.name} className="flex items-center justify-between py-0.5">
-              <span className="text-[9px] text-[#8a8070]">{engine.name}</span>
+              <span className="text-[9px] text-[#556677]">{engine.name}</span>
               <span className={`w-1.5 h-1.5 rounded-full ${
-                engine.status === "online" ? "bg-[#7a9e7a]" : "bg-[#d4cdc2]"
+                engine.status === "online" ? "bg-[#00ff41] shadow-[0_0_6px_rgba(0,255,65,0.5)]" : "bg-[#556677]"
               }`} />
             </div>
           ))}
@@ -102,7 +102,7 @@ export default function LeftSidebar({ activeNav, onNavChange }: LeftSidebarProps
       {/* Collapse button */}
       <button
         onClick={() => setCollapsed(!collapsed)}
-        className="w-full py-2 border-t border-[#ddd6cb] flex items-center justify-center text-[#8a8070] hover:text-[#2c2822] hover:bg-white/50 transition-colors"
+        className="w-full py-2 border-t border-[#1a2332] flex items-center justify-center text-[#556677] hover:text-[#00ff41] hover:bg-[#00ff41]/5 transition-colors"
       >
         {collapsed ? (
           <ChevronRight className="w-3.5 h-3.5" />
