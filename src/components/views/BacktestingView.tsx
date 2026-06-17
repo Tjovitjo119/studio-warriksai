@@ -1,6 +1,7 @@
 // ============================================================================
-// WARRIKS AI — Backtesting View
-// Strategy backtesting with historical data, performance metrics, equity curves
+// WARRIKS AI — Enhanced Backtesting View
+// Multi-run iterations with real engine metrics, recharts equity curve,
+// and per-engine breakdown statistics
 // ============================================================================
 
 import { useState, useMemo, useCallback } from "react";
@@ -14,18 +15,48 @@ import {
   DollarSign,
   LineChart,
   Play,
-  Settings,
   Calendar,
   Clock,
-  Check,
-  X,
   Brain,
   Layers,
+  PieChart,
+  Activity,
 } from "lucide-react";
 import { STRATEGY_LABELS, ENGINE_LABELS } from "@/engine/types";
-import type { StrategyType, CombinationResult } from "@/engine/types";
+import type { StrategyType, CombinationResult, Candle } from "@/engine/types";
 import { generateCandles } from "@/engine/marketData";
 import { runCombinationEngine, getEngineSummary } from "@/engine/strategies/combinationEngine";
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  BarChart,
+  Bar,
+  Cell,
+} from "recharts";
+
+interface IterationResult {
+  agreement: string;
+  agreementCount: number;
+  confluenceScore: number;
+  tradeable: boolean;
+  consensusDirection: string;
+  activeEngines: number;
+}
+
+interface EngineStats {
+  type: string;
+  label: string;
+  signalCount: number;
+  avgConfidence: number;
+  buyCount: number;
+  sellCount: number;
+  neutralCount: number;
+  total: number;
+}
 
 export default function BacktestingView() {
   const [symbol, setSymbol] = useState("NAS100");
@@ -33,71 +64,190 @@ export default function BacktestingView() {
   const [timeframe, setTimeframe] = useState("1H");
   const [startDate, setStartDate] = useState("2026-01-01");
   const [endDate, setEndDate] = useState("2026-06-16");
-  const [candleCount, setCandleCount] = useState(200);
+  const [iterations, setIterations] = useState(50);
   const [running, setRunning] = useState(false);
   const [completed, setCompleted] = useState(false);
-  const [combinationResult, setCombinationResult] = useState<CombinationResult | null>(null);
+
+  // Store all iteration results for analysis
+  const [iterationResults, setIterationResults] = useState<IterationResult[]>([]);
+  const [engineStats, setEngineStats] = useState<EngineStats[]>([]);
+  const [equityCurveData, setEquityCurveData] = useState<{ step: number; equity: number }[]>([]);
 
   const runBacktest = useCallback(() => {
     setRunning(true);
     setCompleted(false);
 
-    // Use setTimeout to allow UI to update, then run the actual engine
+    // Use setTimeout to allow UI to update
     setTimeout(() => {
-      const candles = generateCandles(symbol, candleCount);
+      const results: IterationResult[] = [];
+      const engineMap = new Map<string, { signalCount: number; confSum: number; buyCount: number; sellCount: number; neutralCount: number }>();
 
-      // Run the combination engine on the generated data
-      const result = runCombinationEngine(symbol, candles);
-      setCombinationResult(result);
+      // Initialize engine stats
+      const engineTypes = ["MSS_FVG", "JUDAS_SWING", "BREAKER_BLOCK", "VWAP_REVERSION", "DAILY_RANGE_EXPANSION", "TURTLE_BREAKOUT"];
+      for (const type of engineTypes) {
+        engineMap.set(type, { signalCount: 0, confSum: 0, buyCount: 0, sellCount: 0, neutralCount: 0 });
+      }
 
+      let runningEquity = 10000; // Starting capital
+      const equityPoints: { step: number; equity: number }[] = [{ step: 0, equity: runningEquity }];
+
+      // Run multiple iterations with different random data
+      for (let i = 0; i < iterations; i++) {
+        // Alternate candle bias for variety
+        const bias = i % 3 === 0 ? "bullish" : i % 3 === 1 ? "bearish" : "neutral";
+        const candleCount = 80 + Math.floor(Math.random() * 60);
+        const candles = generateCandles(symbol, candleCount) as Candle[];
+
+        // Add trend bias by post-processing
+        const biased = biasCandles(candles, bias);
+        const result = runCombinationEngine(symbol, biased);
+
+        // Track iteration result
+        const activeCount = result.engines.filter(e => e.signal).length;
+        results.push({
+          agreement: result.agreement,
+          agreementCount: result.agreementCount,
+          confluenceScore: result.confluenceScore,
+          tradeable: result.tradeable,
+          consensusDirection: result.consensusDirection,
+          activeEngines: activeCount,
+        });
+
+        // Track per-engine stats
+        for (const engine of result.engines) {
+          const stats = engineMap.get(engine.type);
+          if (stats) {
+            stats.signalCount += engine.signal ? 1 : 0;
+            stats.confSum += engine.confidence;
+            if (engine.direction === "BUY") stats.buyCount++;
+            else if (engine.direction === "SELL") stats.sellCount++;
+            else stats.neutralCount++;
+          }
+        }
+
+        // Simulate equity based on tradeable results
+        if (result.tradeable && result.agreementCount >= 3) {
+          const winProb = result.confluenceScore / 100;
+          const won = Math.random() < winProb;
+          const riskAmount = runningEquity * 0.015; // 1.5% risk per trade
+          const reward = winProb >= 0.75 ? riskAmount * 2.2 : riskAmount * 1.5;
+          runningEquity += won ? reward : -riskAmount;
+        }
+
+        // Record equity every 5th iteration to keep chart manageable
+        if (i % 5 === 0 || i === iterations - 1) {
+          equityPoints.push({ step: i + 1, equity: Math.round(runningEquity * 100) / 100 });
+        }
+      }
+
+      // Compute final engine stats
+      const computedStats: EngineStats[] = [];
+      for (const [type, stats] of engineMap) {
+        computedStats.push({
+          type,
+          label: ENGINE_LABELS[type as keyof typeof ENGINE_LABELS] || type,
+          signalCount: stats.signalCount,
+          avgConfidence: Math.round(stats.confSum / Math.max(iterations, 1)),
+          buyCount: stats.buyCount,
+          sellCount: stats.sellCount,
+          neutralCount: stats.neutralCount,
+          total: iterations,
+        });
+      }
+
+      setIterationResults(results);
+      setEngineStats(computedStats);
+      setEquityCurveData(equityPoints);
       setRunning(false);
       setCompleted(true);
-    }, 100);
-  }, [symbol, candleCount]);
+    }, 150);
+  }, [symbol, iterations]);
 
-  const combinationSummary = useMemo(() => {
-    if (!combinationResult) return null;
-    return getEngineSummary(combinationResult);
-  }, [combinationResult]);
+  // Post-process candles with a bias
+  const biasCandles = (candles: Candle[], bias: "bullish" | "bearish" | "neutral"): Candle[] => {
+    if (bias === "neutral") return candles;
+    const factor = bias === "bullish" ? 1.002 : 0.998;
+    return candles.map((c, i) => {
+      const drift = Math.pow(factor, i);
+      return {
+        ...c,
+        open: c.open * drift,
+        high: c.high * drift * 1.001,
+        low: c.low * drift * 0.999,
+        close: c.close * drift,
+      };
+    });
+  };
 
-  // Derive backtest statistics from the combination engine result
-  const results = useMemo(() => {
-    if (!completed || !combinationResult) return null;
+  // Derive aggregate metrics from iteration results
+  const metrics = useMemo(() => {
+    if (!completed || iterationResults.length === 0) return null;
 
-    // Generate realistic metrics based on the combination engine's output
-    const engineScore = combinationResult.confluenceScore;
-    const activeCount = combinationResult.engines.filter(e => e.signal).length;
+    const total = iterationResults.length;
+    const tradeableSetups = iterationResults.filter(r => r.tradeable);
+    const tradeableCount = tradeableSetups.length;
+    const noTradeCount = total - tradeableCount;
 
-    // Performance scales with quality of the combination engine result
-    const qualityMultiplier = engineScore / 100;
-    const totalTrades = Math.round(40 * qualityMultiplier + 10);
-    const winRate = Math.round((55 + qualityMultiplier * 30) * 10) / 10;
-    const profitFactor = Math.round((0.8 + qualityMultiplier * 2.2) * 100) / 100;
-    const sharpe = Math.round((0.3 + qualityMultiplier * 1.8) * 100) / 100;
-    const maxDD = Math.round((20 - qualityMultiplier * 14) * 10) / 10;
-    const totalPnl = Math.round((qualityMultiplier * 5000 - 1000) * 100) / 100;
-    const avgRR = Math.round((1.0 + qualityMultiplier * 1.5) * 10) / 10;
-    const wins = Math.round(totalTrades * winRate / 100);
-    const losses = totalTrades - wins;
-    const expectancy = Math.round((totalPnl / Math.max(totalTrades, 1)) * 100) / 100;
+    const avgConfidence = iterationResults.reduce((s, r) => s + r.confluenceScore, 0) / total;
+    const avgAgreement = iterationResults.reduce((s, r) => s + r.agreementCount, 0) / total;
+    const eliteCount = iterationResults.filter(r => r.agreement === "ELITE").length;
+    const institutionalCount = iterationResults.filter(r => r.agreement === "INSTITUTIONAL_GRADE").length;
+    const highProbCount = iterationResults.filter(r => r.agreement === "HIGH_PROBABILITY").length;
+    const moderateProbCount = iterationResults.filter(r => r.agreement === "MODERATE_PROBABILITY").length;
+
+    const buySignals = iterationResults.filter(r => r.consensusDirection === "BUY").length;
+    const sellSignals = iterationResults.filter(r => r.consensusDirection === "SELL").length;
+
+    const finalEquity = equityCurveData.length > 0 ? equityCurveData[equityCurveData.length - 1].equity : 10000;
+    const totalReturn = ((finalEquity - 10000) / 10000) * 100;
 
     return {
-      totalTrades,
-      winRate,
-      profitFactor,
-      sharpe,
-      maxDD,
-      totalPnl,
-      avgRR,
-      wins,
-      losses,
-      expectancy,
-      engineScore,
-      activeCount,
-      agreement: combinationResult.agreement,
-      tradeable: combinationResult.tradeable,
+      total,
+      tradeableCount,
+      noTradeCount,
+      tradeablePercent: Math.round((tradeableCount / total) * 1000) / 10,
+      avgConfidence: Math.round(avgConfidence * 10) / 10,
+      avgAgreement: Math.round(avgAgreement * 10) / 10,
+      eliteCount,
+      institutionalCount,
+      highProbCount,
+      moderateProbCount,
+      buySignals,
+      sellSignals,
+      finalEquity: Math.round(finalEquity * 100) / 100,
+      totalReturn: Math.round(totalReturn * 100) / 100,
     };
-  }, [completed, combinationResult]);
+  }, [completed, iterationResults, equityCurveData]);
+
+  // Agreement distribution chart data
+  const agreementChartData = useMemo(() => {
+    if (!metrics) return [];
+    return [
+      { name: "Elite", value: metrics.eliteCount, color: "#8b5cf6" },
+      { name: "Inst. Grade", value: metrics.institutionalCount, color: "#06b6d4" },
+      { name: "High Prob.", value: metrics.highProbCount, color: "#10b981" },
+      { name: "Moderate", value: metrics.moderateProbCount, color: "#f59e0b" },
+      { name: "No Trade", value: metrics.noTradeCount, color: "#ef4444" },
+    ];
+  }, [metrics]);
+
+  // Engine comparison chart data
+  const engineChartData = useMemo(() => {
+    return engineStats.map(e => ({
+      name: e.type.replace(/_/g, " ").slice(0, 12),
+      signalRate: Math.round((e.signalCount / Math.max(e.total, 1)) * 100),
+      avgConf: e.avgConfidence,
+      buyPct: Math.round((e.buyCount / Math.max(e.total, 1)) * 100),
+      sellPct: Math.round((e.sellCount / Math.max(e.total, 1)) * 100),
+    }));
+  }, [engineStats]);
+
+  const gradientOffset = () => {
+    if (equityCurveData.length < 2) return 0;
+    const first = equityCurveData[0].equity;
+    const last = equityCurveData[equityCurveData.length - 1].equity;
+    return last >= first ? 0 : 1;
+  };
 
   return (
     <div className="h-full flex flex-col bg-[#0a0e17]">
@@ -105,8 +255,12 @@ export default function BacktestingView() {
       <div className="h-10 bg-[#0d1520] border-b border-[#1e2d3d] flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-2.5">
           <RefreshCcw className="w-4 h-4 text-[#06b6d4]" />
-          <span className="text-sm font-semibold text-[#e2e8f0] tracking-wider">Backtesting Engine</span>
-          {completed && <span className="text-[9px] text-[#10b981] bg-[#10b981]/10 px-1.5 py-0.5 border border-[#10b981]/20">Ready</span>}
+          <span className="text-sm font-semibold text-[#e2e8f0] tracking-wider">Enhanced Backtesting Engine</span>
+          {completed && (
+            <span className="flex items-center gap-1 text-[9px] text-[#10b981] bg-[#10b981]/10 px-1.5 py-0.5 border border-[#10b981]/20">
+              <Activity className="w-2.5 h-2.5" /> {metrics?.total || 0} iterations
+            </span>
+          )}
         </div>
         <button
           onClick={runBacktest}
@@ -116,14 +270,14 @@ export default function BacktestingView() {
           {running ? (
             <><RefreshCcw className="w-3 h-3 animate-spin" /> Running...</>
           ) : (
-            <><Play className="w-3 h-3" /> Run Backtest</>
+            <><Play className="w-3 h-3" /> Run {iterations} Iterations</>
           )}
         </button>
       </div>
 
       <div className="flex-1 flex overflow-hidden">
         {/* Config Panel */}
-        <div className="w-[280px] bg-[#0d1520] border-r border-[#1e2d3d] p-4 shrink-0 overflow-y-auto">
+        <div className="w-[240px] bg-[#0d1520] border-r border-[#1e2d3d] p-4 shrink-0 overflow-y-auto">
           <div className="space-y-4">
             {/* Symbol */}
             <div>
@@ -138,15 +292,15 @@ export default function BacktestingView() {
               </div>
             </div>
 
-            {/* Strategy */}
+            {/* Iterations */}
             <div>
-              <label className="text-[9px] text-[#64748b] uppercase tracking-wider font-semibold mb-1.5 block">Strategy</label>
-              <div className="space-y-1">
-                {(Object.entries(STRATEGY_LABELS) as [StrategyType, string][]).map(([key, label]) => (
-                  <button key={key} onClick={() => setStrategy(key)}
-                    className={`w-full text-left px-2 py-1.5 text-[10px] transition-all ${
-                      strategy === key ? "text-[#06b6d4] bg-[#06b6d4]/10 border-l-2 border-l-[#06b6d4]" : "text-[#64748b] bg-[#111d2e] hover:text-[#e2e8f0] border-l-2 border-l-transparent"
-                    }`}>{label}</button>
+              <label className="text-[9px] text-[#64748b] uppercase tracking-wider font-semibold mb-1.5 block">Iterations</label>
+              <div className="flex flex-wrap gap-1">
+                {[20, 50, 100, 200].map((n) => (
+                  <button key={n} onClick={() => setIterations(n)}
+                    className={`px-2 py-1 text-[9px] font-medium transition-all ${
+                      iterations === n ? "text-[#06b6d4] bg-[#06b6d4]/10 border border-[#06b6d4]/20" : "text-[#64748b] bg-[#111d2e] border border-[#1e2d3d] hover:text-[#e2e8f0]"
+                    }`}>{n}</button>
                 ))}
               </div>
             </div>
@@ -180,14 +334,38 @@ export default function BacktestingView() {
                 </div>
               </div>
             </div>
-
-            {/* Initial capital */}
-            <div>
-              <label className="text-[9px] text-[#64748b] uppercase tracking-wider font-semibold mb-1.5 block">Initial Capital</label>
-              <input type="number" defaultValue="10000"
-                className="w-full bg-[#111d2e] border border-[#1e2d3d] text-[10px] text-[#e2e8f0] px-2 py-1.5 outline-none focus:border-[#06b6d4]/30 font-mono" />
-            </div>
           </div>
+
+          {/* Quick Stats */}
+          {completed && metrics && (
+            <div className="mt-4 p-2.5 border border-[#1e2d3d] bg-[#111d2e]/50">
+              <div className="text-[8px] text-[#64748b] uppercase tracking-wider font-semibold mb-2">Summary</div>
+              <div className="space-y-1.5">
+                <div className="flex justify-between text-[9px]">
+                  <span className="text-[#64748b]">Total Return</span>
+                  <span className={`font-bold ${metrics.totalReturn >= 0 ? "text-[#10b981]" : "text-[#ef4444]"}`}>
+                    {metrics.totalReturn >= 0 ? "+" : ""}{metrics.totalReturn}%
+                  </span>
+                </div>
+                <div className="flex justify-between text-[9px]">
+                  <span className="text-[#64748b]">Final Equity</span>
+                  <span className="font-bold text-[#e2e8f0]">${metrics.finalEquity.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-[9px]">
+                  <span className="text-[#64748b]">Tradeable</span>
+                  <span className="font-bold text-[#06b6d4]">{metrics.tradeablePercent}%</span>
+                </div>
+                <div className="flex justify-between text-[9px]">
+                  <span className="text-[#64748b]">Avg Confluence</span>
+                  <span className="font-bold text-[#f59e0b]">{metrics.avgConfidence}/100</span>
+                </div>
+                <div className="flex justify-between text-[9px]">
+                  <span className="text-[#64748b]">Avg Agreement</span>
+                  <span className="font-bold text-[#e2e8f0]">{metrics.avgAgreement}/6</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Results Panel */}
@@ -196,168 +374,225 @@ export default function BacktestingView() {
             <div className="flex flex-col items-center justify-center h-full text-center">
               <BarChart3 className="w-12 h-12 text-[#475569] mb-3 opacity-30" />
               <span className="text-xs text-[#64748b]">Configure parameters and run backtest</span>
-              <span className="text-[10px] text-[#475569] mt-1">Select strategy, symbol, timeframe and date range</span>
+              <span className="text-[10px] text-[#475569] mt-1">Runs {iterations} iterations with randomized market data</span>
             </div>
-          ) : results ? (
+          ) : metrics ? (
             <div className="space-y-4">
-              {/* Engine Analysis Summary */}
-              {combinationResult && (
-                <div className="glass-card rounded-sm p-3">
-                  <div className="flex items-center gap-1.5 mb-3">
-                    <Brain className="w-3 h-3 text-[#06b6d4]" />
-                    <span className="text-[10px] font-semibold text-[#e2e8f0] uppercase tracking-wider">6-Engine Agreement Matrix</span>
-                    <span className={`ml-auto text-[8px] px-1.5 py-0.5 font-bold border ${
-                      results.tradeable ? "text-[#10b981] border-[#10b981]/30" : "text-[#ef4444] border-[#ef4444]/30"
-                    }`}>
-                      {results.tradeable ? "TRADE" : "NO TRADE"}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 mb-3">
-                    <div className="border border-[#1e2d3d] bg-[#111d2e]/50 p-2.5">
-                      <div className="text-[7px] text-[#64748b] uppercase">Agreement</div>
-                      <div className={`text-xs font-bold trading-mono ${results.agreement === "ELITE" ? "text-[#8b5cf6]" : results.tradeable ? "text-[#10b981]" : "text-[#ef4444]"}`}>
-                        {results.agreement.replace(/_/g, " ")}
-                      </div>
-                    </div>
-                    <div className="border border-[#1e2d3d] bg-[#111d2e]/50 p-2.5">
-                      <div className="text-[7px] text-[#64748b] uppercase">Engine Score</div>
-                      <div className="text-xs font-bold trading-mono text-[#f59e0b]">{results.engineScore}/100</div>
-                    </div>
-                    <div className="border border-[#1e2d3d] bg-[#111d2e]/50 p-2.5">
-                      <div className="text-[7px] text-[#64748b] uppercase">Active Engines</div>
-                      <div className="text-xs font-bold trading-mono text-[#06b6d4]">{results.activeCount}/6</div>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    {combinationResult.engines.filter(e => e.signal).slice(0, 6).map((eng, i) => (
-                      <div key={i} className="flex items-center justify-between px-2 py-1.5 border border-[#1e2d3d] bg-[#111d2e]/50">
-                        <span className="text-[8px] text-[#e2e8f0]">{ENGINE_LABELS[eng.type] || eng.type}</span>
-                        <div className="flex items-center gap-2">
-                          <span className={`text-[8px] font-bold ${eng.direction === "BUY" ? "text-[#10b981]" : eng.direction === "SELL" ? "text-[#ef4444]" : "text-[#64748b]"}`}>
-                            {eng.direction}
-                          </span>
-                          <span className="text-[8px] font-bold text-[#f59e0b]">{eng.confidence}%</span>
-                        </div>
-                      </div>
-                    ))}
-                    {combinationResult.boostersApplied.filter(b => b.applied).length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2">
-                        {combinationResult.boostersApplied.filter(b => b.applied).map((b, i) => (
-                          <span key={i} className="text-[7px] px-1 py-0.5 bg-[#10b981]/10 text-[#10b981] border border-[#10b981]/20">
-                            +{b.points} {b.label}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
               {/* Summary Cards */}
-              <div className="grid grid-cols-4 gap-3">
+              <div className="grid grid-cols-5 gap-3">
                 <div className="glass-card rounded-sm p-3">
                   <div className="flex items-center gap-1.5 mb-1">
                     <DollarSign className="w-3 h-3 text-[#10b981]" />
-                    <span className="text-[8px] text-[#64748b] uppercase tracking-wider">Total P&L</span>
+                    <span className="text-[8px] text-[#64748b] uppercase tracking-wider">Final Equity</span>
                   </div>
-                  <span className={`text-lg font-bold trading-mono ${results.totalPnl >= 0 ? "text-[#10b981]" : "text-[#ef4444]"}`}>
-                    {results.totalPnl >= 0 ? "+" : ""}${results.totalPnl.toFixed(2)}
+                  <span className={`text-lg font-bold trading-mono ${metrics.totalReturn >= 0 ? "text-[#10b981]" : "text-[#ef4444]"}`}>
+                    ${metrics.finalEquity.toFixed(2)}
                   </span>
+                  <div className={`text-[8px] mt-0.5 ${metrics.totalReturn >= 0 ? "text-[#10b981]" : "text-[#ef4444]"}`}>
+                    {metrics.totalReturn >= 0 ? "+" : ""}{metrics.totalReturn}%
+                  </div>
                 </div>
                 <div className="glass-card rounded-sm p-3">
                   <div className="flex items-center gap-1.5 mb-1">
                     <Target className="w-3 h-3 text-[#f59e0b]" />
-                    <span className="text-[8px] text-[#64748b] uppercase tracking-wider">Win Rate</span>
+                    <span className="text-[8px] text-[#64748b] uppercase tracking-wider">Tradeable</span>
                   </div>
-                  <span className="text-lg font-bold trading-mono text-[#f59e0b]">{results.winRate}%</span>
-                  <div className="text-[8px] text-[#475569]">{results.wins}W / {results.losses}L</div>
+                  <span className="text-lg font-bold trading-mono text-[#06b6d4]">{metrics.tradeablePercent}%</span>
+                  <div className="text-[8px] text-[#475569]">{metrics.tradeableCount}/{metrics.total} setups</div>
                 </div>
                 <div className="glass-card rounded-sm p-3">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <TrendingUp className="w-3 h-3 text-[#06b6d4]" />
-                    <span className="text-[8px] text-[#64748b] uppercase tracking-wider">Profit Factor</span>
+                    <Brain className="w-3 h-3 text-[#8b5cf6]" />
+                    <span className="text-[8px] text-[#64748b] uppercase tracking-wider">Elite+Grade</span>
                   </div>
-                  <span className="text-lg font-bold trading-mono text-[#06b6d4]">{results.profitFactor.toFixed(2)}</span>
+                  <span className="text-lg font-bold trading-mono text-[#8b5cf6]">{(metrics.eliteCount + metrics.institutionalCount)}</span>
+                  <div className="text-[8px] text-[#475569]">ELITE + INST. setups</div>
                 </div>
                 <div className="glass-card rounded-sm p-3">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <TrendingDown className="w-3 h-3 text-[#ef4444]" />
-                    <span className="text-[8px] text-[#64748b] uppercase tracking-wider">Max Drawdown</span>
+                    <Activity className="w-3 h-3 text-[#f59e0b]" />
+                    <span className="text-[8px] text-[#64748b] uppercase tracking-wider">Avg Confluence</span>
                   </div>
-                  <span className="text-lg font-bold trading-mono text-[#ef4444]">{results.maxDD}%</span>
+                  <span className="text-lg font-bold trading-mono text-[#f59e0b]">{metrics.avgConfidence}</span>
+                  <div className="text-[8px] text-[#475569]">/ 100</div>
+                </div>
+                <div className="glass-card rounded-sm p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Layers className="w-3 h-3 text-[#06b6d4]" />
+                    <span className="text-[8px] text-[#64748b] uppercase tracking-wider">Direction Bias</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg font-bold trading-mono text-[#10b981]">{metrics.buySignals}▲</span>
+                    <span className="text-lg font-bold trading-mono text-[#ef4444]">{metrics.sellSignals}▼</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Detailed Metrics */}
-              <div className="glass-card rounded-sm p-3">
-                <div className="flex items-center gap-1.5 mb-3">
-                  <BarChart3 className="w-3 h-3 text-[#06b6d4]" />
-                  <span className="text-[10px] font-semibold text-[#e2e8f0] uppercase tracking-wider">Detailed Metrics</span>
-                </div>
-                <div className="grid grid-cols-3 gap-4">
-                  {[
-                    { label: "Total Trades", value: results.totalTrades.toString() },
-                    { label: "Sharpe Ratio", value: results.sharpe.toFixed(2), color: results.sharpe >= 1 ? "#10b981" : "#ef4444" },
-                    { label: "Avg R:R", value: results.avgRR.toFixed(2) },
-                    { label: "Expectancy", value: `$${results.expectancy.toFixed(2)}`, color: results.expectancy > 0 ? "#10b981" : "#ef4444" },
-                    { label: "Avg Win", value: `$${results.totalPnl > 0 ? (results.totalPnl / Math.max(results.wins, 1)).toFixed(2) : "0.00"}`, color: "#10b981" },
-                    { label: "Avg Loss", value: `$${results.totalPnl < 0 ? (results.totalPnl / Math.max(results.losses, 1)).toFixed(2) : "0.00"}`, color: "#ef4444" },
-                  ].map((m, i) => (
-                    <div key={i} className="border border-[#1e2d3d] bg-[#111d2e]/50 p-2.5">
-                      <div className="text-[8px] text-[#64748b] uppercase tracking-wider mb-0.5">{m.label}</div>
-                      <span className="text-sm font-bold trading-mono" style={{ color: m.color || "#e2e8f0" }}>{m.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Equity Curve */}
+              {/* Equity Curve (Recharts) */}
               <div className="glass-card rounded-sm p-3">
                 <div className="flex items-center gap-1.5 mb-3">
                   <LineChart className="w-3 h-3 text-[#10b981]" />
                   <span className="text-[10px] font-semibold text-[#e2e8f0] uppercase tracking-wider">Equity Curve</span>
+                  <span className={`ml-auto text-[8px] font-bold ${metrics.totalReturn >= 0 ? "text-[#10b981]" : "text-[#ef4444]"}`}>
+                    {metrics.totalReturn >= 0 ? "+" : ""}{metrics.totalReturn}%
+                  </span>
                 </div>
-                <div className="h-28 bg-[#111d2e] border border-[#1e2d3d] flex items-end gap-[1px] p-2">
-                  {(results.totalPnl >= 0
-                    ? [60, 62, 65, 63, 68, 70, 67, 72, 75, 78, 76, 80, 82, 85, 83, 86, 88, 90, 92, 95]
-                    : [60, 58, 55, 57, 54, 50, 52, 48, 45, 42, 40, 38, 35, 32, 30, 28, 25, 22, 20, 18]
-                  ).map((h, i) => (
-                    <div key={i} className="flex-1 flex flex-col justify-end">
-                      <div className="w-full" style={{
-                        height: `${h}%`,
-                        background: results.totalPnl >= 0 ? i % 5 === 4 ? "rgba(6, 182, 212, 0.4)" : "rgba(16, 185, 129, 0.25)" : "rgba(239, 68, 68, 0.25)",
-                      }} />
-                    </div>
-                  ))}
+                <div className="h-36">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={equityCurveData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
+                      <defs>
+                        <linearGradient id="equityGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={metrics.totalReturn >= 0 ? "#10b981" : "#ef4444"} stopOpacity={0.3} />
+                          <stop offset="95%" stopColor={metrics.totalReturn >= 0 ? "#10b981" : "#ef4444"} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="step" tick={{ fill: '#64748b', fontSize: 9 }} axisLine={{ stroke: '#1e2d3d' }} tickLine={false} />
+                      <YAxis tick={{ fill: '#64748b', fontSize: 9 }} axisLine={{ stroke: '#1e2d3d' }} tickLine={false} domain={['dataMin - 200', 'dataMax + 200']} />
+                      <Tooltip
+                        contentStyle={{ background: '#0d1520', border: '1px solid #1e2d3d', borderRadius: 0, fontSize: 10, color: '#e2e8f0' }}
+                        formatter={(value: number) => [`$${value.toFixed(2)}`, 'Equity']}
+                        labelFormatter={(label) => `Iteration ${label}`}
+                      />
+                      <Area type="monotone" dataKey="equity" stroke={metrics.totalReturn >= 0 ? "#10b981" : "#ef4444"} strokeWidth={2} fill="url(#equityGradient)" dot={false} />
+                    </AreaChart>
+                  </ResponsiveContainer>
                 </div>
               </div>
 
-              {/* Sample Trades */}
+              {/* Agreement Distribution */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="glass-card rounded-sm p-3">
+                  <div className="flex items-center gap-1.5 mb-3">
+                    <PieChart className="w-3 h-3 text-[#06b6d4]" />
+                    <span className="text-[10px] font-semibold text-[#e2e8f0] uppercase tracking-wider">Agreement Distribution</span>
+                  </div>
+                  <div className="h-28">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={agreementChartData} layout="vertical" margin={{ top: 0, right: 10, left: 55, bottom: 0 }}>
+                        <XAxis type="number" tick={{ fill: '#64748b', fontSize: 8 }} axisLine={{ stroke: '#1e2d3d' }} tickLine={false} />
+                        <YAxis dataKey="name" type="category" tick={{ fill: '#64748b', fontSize: 8 }} axisLine={false} tickLine={false} width={60} />
+                        <Tooltip
+                          contentStyle={{ background: '#0d1520', border: '1px solid #1e2d3d', borderRadius: 0, fontSize: 10, color: '#e2e8f0' }}
+                        />
+                        <Bar dataKey="value" radius={[0, 2, 2, 0]}>
+                          {agreementChartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Per-Engine Performance */}
+                <div className="glass-card rounded-sm p-3">
+                  <div className="flex items-center gap-1.5 mb-3">
+                    <BarChart3 className="w-3 h-3 text-[#f59e0b]" />
+                    <span className="text-[10px] font-semibold text-[#e2e8f0] uppercase tracking-wider">Engine Performance</span>
+                  </div>
+                  <div className="h-28">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={engineChartData} margin={{ top: 5, right: 10, left: 5, bottom: 5 }}>
+                        <XAxis dataKey="name" tick={{ fill: '#64748b', fontSize: 6 }} axisLine={{ stroke: '#1e2d3d' }} tickLine={false} interval={0} angle={-20} textAnchor="end" />
+                        <YAxis tick={{ fill: '#64748b', fontSize: 8 }} axisLine={{ stroke: '#1e2d3d' }} tickLine={false} domain={[0, 100]} />
+                        <Tooltip
+                          contentStyle={{ background: '#0d1520', border: '1px solid #1e2d3d', borderRadius: 0, fontSize: 10, color: '#e2e8f0' }}
+                        />
+                        <Bar dataKey="signalRate" name="Signal Rate %" fill="#06b6d4" radius={[2, 2, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+
+              {/* Per-Engine Breakdown Table */}
+              <div className="glass-card rounded-sm p-3">
+                <div className="flex items-center gap-1.5 mb-3">
+                  <Layers className="w-3 h-3 text-[#06b6d4]" />
+                  <span className="text-[10px] font-semibold text-[#e2e8f0] uppercase tracking-wider">Per-Engine Breakdown</span>
+                  <span className="text-[8px] text-[#475569] ml-auto">{iterations} iterations</span>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[9px]">
+                    <thead>
+                      <tr className="border-b border-[#1e2d3d]">
+                        <th className="text-left py-1.5 px-2 text-[#64748b] font-semibold">Engine</th>
+                        <th className="text-right py-1.5 px-2 text-[#64748b] font-semibold">Signal %</th>
+                        <th className="text-right py-1.5 px-2 text-[#64748b] font-semibold">Avg Conf</th>
+                        <th className="text-right py-1.5 px-2 text-[#64748b] font-semibold">BUY</th>
+                        <th className="text-right py-1.5 px-2 text-[#64748b] font-semibold">SELL</th>
+                        <th className="text-right py-1.5 px-2 text-[#64748b] font-semibold">NEUTRAL</th>
+                        <th className="text-right py-1.5 px-2 text-[#64748b] font-semibold">Direction</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {engineStats.map((eng, i) => (
+                        <tr key={i} className="border-b border-[#1e2d3d]/50 hover:bg-[#111d2e]/50 transition-colors">
+                          <td className="py-1.5 px-2 text-[#e2e8f0] font-medium">{eng.label}</td>
+                          <td className="py-1.5 px-2 text-right">
+                            <span className={`font-bold ${eng.signalCount / eng.total >= 0.5 ? "text-[#10b981]" : "text-[#f59e0b]"}`}>
+                              {Math.round((eng.signalCount / eng.total) * 100)}%
+                            </span>
+                          </td>
+                          <td className="py-1.5 px-2 text-right text-[#f59e0b] font-bold">{eng.avgConfidence}</td>
+                          <td className="py-1.5 px-2 text-right text-[#10b981]">{eng.buyCount}</td>
+                          <td className="py-1.5 px-2 text-right text-[#ef4444]">{eng.sellCount}</td>
+                          <td className="py-1.5 px-2 text-right text-[#64748b]">{eng.neutralCount}</td>
+                          <td className="py-1.5 px-2 text-right">
+                            <span className={`font-bold ${eng.buyCount > eng.sellCount ? "text-[#10b981]" : eng.sellCount > eng.buyCount ? "text-[#ef4444]" : "text-[#64748b]"}`}>
+                              {eng.buyCount > eng.sellCount ? "▲ BUY" : eng.sellCount > eng.buyCount ? "▼ SELL" : "—"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Iteration Samples */}
               <div className="glass-card rounded-sm p-3">
                 <div className="flex items-center gap-1.5 mb-3">
                   <Clock className="w-3 h-3 text-[#f59e0b]" />
-                  <span className="text-[10px] font-semibold text-[#e2e8f0] uppercase tracking-wider">Sample Trades</span>
+                  <span className="text-[10px] font-semibold text-[#e2e8f0] uppercase tracking-wider">Sample Iterations (Last 20)</span>
                 </div>
-                <div className="divide-y divide-[#1e2d3d]/50">
-                  {[
-                    { symbol: symbol, dir: "BUY", entry: 19420, exit: 19580, pnl: 79.9, status: "WIN", rr: 1.8 },
-                    { symbol: symbol, dir: "SELL", entry: 2355, exit: 2340, pnl: 30.0, status: "WIN", rr: 2.1 },
-                    { symbol: symbol, dir: "BUY", entry: 1.0830, exit: 1.0805, pnl: -25.0, status: "LOSS", rr: 2.0 },
-                    { symbol: symbol, dir: "SELL", entry: 1.2680, exit: 1.2640, pnl: 60.0, status: "WIN", rr: 1.5 },
-                    { symbol: symbol, dir: "SELL", entry: 19600, exit: 19650, pnl: -15.0, status: "LOSS", rr: 2.5 },
-                  ].map((t, i) => (
-                    <div key={i} className="grid grid-cols-7 gap-2 px-2 py-2 text-[9px] items-center">
-                      <span className="font-semibold text-[#e2e8f0]">{t.symbol}</span>
-                      <span className={t.dir === "BUY" ? "text-[#10b981]" : "text-[#ef4444]"}>{t.dir}</span>
-                      <span className="text-[#64748b]">{t.entry.toFixed(2)}</span>
-                      <span className="text-[#64748b]">{t.exit.toFixed(2)}</span>
-                      <span className="text-[#64748b]">{t.rr.toFixed(1)}</span>
-                      <span className={`font-bold ${t.pnl >= 0 ? "text-[#10b981]" : "text-[#ef4444]"}`}>
-                        {t.pnl >= 0 ? "+" : ""}${t.pnl.toFixed(1)}
-                      </span>
-                      <span className={`text-right ${t.status === "WIN" ? "text-[#10b981]" : "text-[#ef4444]"}`}>{t.status}</span>
-                    </div>
-                  ))}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[8px]">
+                    <thead>
+                      <tr className="border-b border-[#1e2d3d]">
+                        <th className="text-left py-1 px-2 text-[#64748b]">#</th>
+                        <th className="text-left py-1 px-2 text-[#64748b]">Agreement</th>
+                        <th className="text-right py-1 px-2 text-[#64748b]">Count</th>
+                        <th className="text-right py-1 px-2 text-[#64748b]">Confluence</th>
+                        <th className="text-right py-1 px-2 text-[#64748b]">Active</th>
+                        <th className="text-right py-1 px-2 text-[#64748b]">Direction</th>
+                        <th className="text-right py-1 px-2 text-[#64748b]">Tradeable</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {iterationResults.slice(-20).map((r, i) => (
+                        <tr key={i} className="border-b border-[#1e2d3d]/30 hover:bg-[#111d2e]/50">
+                          <td className="py-1 px-2 text-[#64748b]">{iterationResults.length - 20 + i + 1}</td>
+                          <td className={`py-1 px-2 font-medium ${
+                            r.agreement === "ELITE" ? "text-[#8b5cf6]" :
+                            r.agreement === "INSTITUTIONAL_GRADE" ? "text-[#06b6d4]" :
+                            r.agreement === "HIGH_PROBABILITY" ? "text-[#10b981]" :
+                            r.agreement === "MODERATE_PROBABILITY" ? "text-[#f59e0b]" :
+                            "text-[#ef4444]"
+                          }`}>{r.agreement.replace(/_/g, " ")}</td>
+                          <td className="py-1 px-2 text-right text-[#e2e8f0]">{r.agreementCount}/6</td>
+                          <td className="py-1 px-2 text-right font-bold text-[#f59e0b]">{r.confluenceScore}</td>
+                          <td className="py-1 px-2 text-right text-[#06b6d4]">{r.activeEngines}/6</td>
+                          <td className={`py-1 px-2 text-right font-bold ${r.consensusDirection === "BUY" ? "text-[#10b981]" : r.consensusDirection === "SELL" ? "text-[#ef4444]" : "text-[#64748b]"}`}>
+                            {r.consensusDirection === "NEUTRAL" ? "—" : r.consensusDirection}
+                          </td>
+                          <td className={`py-1 px-2 text-right font-bold ${r.tradeable ? "text-[#10b981]" : "text-[#ef4444]"}`}>
+                            {r.tradeable ? "YES" : "NO"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>

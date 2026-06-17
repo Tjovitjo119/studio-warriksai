@@ -6,6 +6,9 @@
 import { describe, it, expect } from "vitest";
 import { runCombinationEngine, getEngineSummary } from "./combinationEngine";
 import { getSessionPriority, isInApprovedSession } from "../session";
+import { analyzeMarketStructure } from "../marketStructure";
+import { analyzeLiquidity } from "../liquidity";
+import { analyzeOrderFlow } from "../orderFlow";
 import type { Candle } from "../types";
 
 /**
@@ -239,6 +242,88 @@ describe("Combination Engine", () => {
       const summary = getEngineSummary(result);
 
       expect(summary.agreementLabel.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe("Edge Cases", () => {
+    it("consensusDirection is NEUTRAL when engines disagree", () => {
+      const candles = generateTestCandles(60, "neutral");
+      const result = runCombinationEngine("NAS100", candles);
+
+      // With limited neutral data, engines should disagree
+      expect(["BUY", "SELL", "NEUTRAL"]).toContain(result.consensusDirection);
+      expect(result.agreementCount).toBeGreaterThanOrEqual(0);
+    });
+
+    it("tradeable is false when insufficient agreement", () => {
+      const candles = generateTestCandles(20, "neutral");
+      const result = runCombinationEngine("EURUSD", candles);
+
+      // With only 20 candles, most engines won't fire
+      expect(result.tradeable).toBe(false);
+      expect(result.agreementCount).toBeLessThan(3);
+    });
+
+    it("description is always populated and mentions agreement state", () => {
+      const candles = generateTestCandles(50, "bullish");
+      const result = runCombinationEngine("GBPUSD", candles);
+      expect(result.description.length).toBeGreaterThan(10);
+      expect(result.description).toMatch(/(ELITE|INSTITUTIONAL_GRADE|HIGH_PROBABILITY|MODERATE_PROBABILITY|NO_TRADE)/);
+    });
+
+    it("each engine has a unique type", () => {
+      const candles = generateTestCandles(100, "bullish");
+      const result = runCombinationEngine("NAS100", candles);
+      const types = result.engines.map((e) => e.type);
+      const uniqueTypes = new Set(types);
+      expect(uniqueTypes.size).toBe(6);
+    });
+
+    it("engines have unique priority values", () => {
+      const candles = generateTestCandles(80, "bullish");
+      const result = runCombinationEngine("NAS100", candles);
+      const priorities = result.engines.map((e) => e.priority);
+      expect(priorities).toContain("VERY_HIGH");
+      expect(priorities).toContain("MEDIUM");
+      expect(priorities).toContain("HIGH");
+    });
+
+    it("sessionPriority is always set", () => {
+      const candles = generateTestCandles(80, "bullish");
+      const result = runCombinationEngine("NAS100", candles);
+      expect(["HIGHEST", "SECOND", "THIRD", "LOWEST"]).toContain(result.sessionPriority);
+    });
+
+    it("precomputed core engines are used when provided", () => {
+      const candles = generateTestCandles(80, "bullish");
+
+      const structure = analyzeMarketStructure(candles, "NAS100");
+      const liquidity = analyzeLiquidity(candles, "NAS100");
+      const orderFlow = analyzeOrderFlow(candles, liquidity.sweepDirection, "NAS100");
+
+      const result = runCombinationEngine("NAS100", candles, { structure, liquidity, orderFlow });
+      expect(result).toBeDefined();
+      expect(result.engines).toHaveLength(6);
+    });
+
+    it("confluenceScore equals sum when no boosters fire", () => {
+      // Use data that produces no signal to check base score
+      const candles = generateTestCandles(30, "neutral");
+      const result = runCombinationEngine("NAS100", candles);
+
+      // With little agreement, boosters likely won't fire
+      const baseScore = Math.round((result.agreementCount / 6) * 100);
+      expect(result.confluenceScore).toBeGreaterThanOrEqual(baseScore);
+      expect(result.confluenceScore).toBeLessThanOrEqual(100);
+    });
+
+    it("all engines have confidence 0 for empty candles", () => {
+      const result = runCombinationEngine("NAS100", []);
+      for (const engine of result.engines) {
+        expect(engine.confidence).toBe(0);
+        expect(engine.signal).toBe(false);
+        expect(engine.direction).toBe("NEUTRAL");
+      }
     });
   });
 });

@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router";
 import { Zap } from "lucide-react";
-import { useAction } from "convex/react";
+import { useAction, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -43,6 +43,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user, signOut, isLoading, isAuthenticated } = useAuth();
   const fetchLiveCandles = useAction(api.marketData.fetchLiveCandles);
+  const saveSignal = useMutation(api.signals.createSignal);
 
   const [activeSymbol, setActiveSymbol] = useState("NAS100");
   const [activeNav, setActiveNav] = useState("dashboard");
@@ -154,6 +155,57 @@ export default function Dashboard() {
     }, 60000);
     return () => clearInterval(interval);
   }, [loadMarketData]);
+
+  // Save combination results to Convex as signals (with 5-minute cooldown per symbol to prevent spam)
+  const lastSignalTimeRef = useRef<Record<string, number>>({});
+  useEffect(() => {
+    if (!combinationResult || !combinationResult.tradeable) return;
+
+    const now = Date.now();
+    const lastTime = lastSignalTimeRef.current[activeSymbol] ?? 0;
+    if (now - lastTime < 300_000) return; // 5-minute cooldown
+
+    const consensusEngine = combinationResult.engines.find(e => e.signal && e.direction !== "NEUTRAL");
+    if (!consensusEngine) return;
+
+    const currentPrice = candlesMap[activeSymbol]?.[candlesMap[activeSymbol]?.length - 1]?.close || 0;
+    const stopLoss = consensusEngine.direction === "BUY" ? currentPrice * 0.99 : currentPrice * 1.01;
+    const tp1 = consensusEngine.direction === "BUY" ? currentPrice * 1.02 : currentPrice * 0.98;
+    const tp2 = consensusEngine.direction === "BUY" ? currentPrice * 1.03 : currentPrice * 0.97;
+    const tp3 = consensusEngine.direction === "BUY" ? currentPrice * 1.045 : currentPrice * 0.955;
+
+    saveSignal({
+      symbol: activeSymbol,
+      direction: combinationResult.consensusDirection,
+      confidence: combinationResult.confluenceScore,
+      confluenceScore: combinationResult.confluenceScore,
+      agreement: combinationResult.agreement,
+      agreementCount: combinationResult.agreementCount,
+      tradeable: combinationResult.tradeable,
+      entryZone: {
+        high: currentPrice * 1.001,
+        low: currentPrice * 0.999,
+        midpoint: currentPrice,
+      },
+      stopLoss,
+      takeProfit: { tp1, tp2, tp3 },
+      riskReward: Math.round((Math.abs(tp1 - currentPrice) / Math.abs(stopLoss - currentPrice)) * 10) / 10 || 1.5,
+      killzone: "NEW_YORK",
+      entryModel: consensusEngine.type,
+      sessionPriority: combinationResult.sessionPriority,
+      engines: combinationResult.engines.map(e => ({
+        type: e.type,
+        direction: e.direction,
+        confidence: e.confidence,
+        signal: e.signal,
+        reason: e.reason,
+      })),
+      boosters: combinationResult.boostersApplied.filter(b => b.applied).map(b => b.label),
+      description: combinationResult.description,
+    }).then(() => {
+      lastSignalTimeRef.current[activeSymbol] = Date.now();
+    });
+  }, [combinationResult, activeSymbol, combinationResult?.agreement, combinationResult?.consensusDirection, saveSignal]);
 
   // Live tick simulation
   useEffect(() => {
