@@ -15,8 +15,8 @@ import {
   DollarSign,
   Newspaper,
 } from "lucide-react";
-import type { Signal, MultiStrategyOutput, StrategyType, TradeDecision } from "@/engine/types";
-import { STRATEGY_LABELS } from "@/engine/types";
+import type { Signal, MultiStrategyOutput, StrategyType, TradeDecision, CombinationResult } from "@/engine/types";
+import { STRATEGY_LABELS, ENGINE_LABELS } from "@/engine/types";
 import TradeExecution from "./TradeExecution";
 import TradeJournal from "./TradeJournal";
 
@@ -26,6 +26,16 @@ interface RightPanelProps {
   signals: Signal[];
   multiStrategy?: MultiStrategyOutput | null;
   strategySummary?: { label: string; consensus: string; agreement: string; strategyBreakdown: { type: string; dir: string; conf: number }[] } | null;
+  combinationResult?: CombinationResult | null;
+  combinationSummary?: {
+    totalEngines: number;
+    activeEngines: number;
+    agreementLabel: string;
+    consensus: string;
+    score: number;
+    tradeable: boolean;
+    engineDetails: { type: string; dir: string; conf: number; signal: boolean }[];
+  } | null;
   activeSymbol?: string;
   currentPrice?: number;
   decision?: TradeDecision | null;
@@ -93,6 +103,8 @@ export default function RightPanel({
   signals,
   multiStrategy,
   strategySummary,
+  combinationResult,
+  combinationSummary,
   activeSymbol = "NAS100",
   currentPrice = 0,
   decision = null,
@@ -292,6 +304,85 @@ export default function RightPanel({
                       Avg confidence: {multiStrategy.avgConfidence}%
                     </span>
                   </div>
+                </div>
+              )}
+            </div>
+
+            {/* 6-Engine Agreement Matrix */}
+            <div className="mx-2 mb-2 bg-white border border-[#e0dad0]">
+              <div className="px-3 py-2 border-b border-[#e8e3da] flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <BarChart3 className="w-3 h-3 text-[#2c2822]" />
+                  <span className="text-[10px] font-semibold text-[#2c2822] uppercase tracking-wider">6-Engine Matrix</span>
+                </div>
+                {combinationSummary && (
+                  <div className="flex items-center gap-1.5">
+                    <span className={`text-[8px] px-1 py-0.5 font-bold border ${
+                      combinationSummary.tradeable ? "text-[#7a9e7a] border-[#7a9e7a]/30" : "text-[#c46a6a] border-[#c46a6a]/30"
+                    }`}>
+                      {combinationSummary.agreementLabel}
+                    </span>
+                  </div>
+                )}
+              </div>
+              {combinationResult && combinationSummary ? (
+                <div className="p-2">
+                  <div className="flex items-center justify-between mb-2 px-1">
+                    <span className="text-[9px] text-[#8a8070]">
+                      {combinationSummary.activeEngines}/{combinationSummary.totalEngines} engines active
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[9px] font-bold text-[#2c2822]">{combinationSummary.score}%</span>
+                      <span className={`text-[8px] px-1 py-0.5 border font-bold ${
+                        combinationSummary.tradeable ? "text-[#7a9e7a] border-[#7a9e7a]/30 bg-[#7a9e7a]/5" : "text-[#c46a6a] border-[#c46a6a]/30 bg-[#c46a6a]/5"
+                      }`}>
+                        {combinationSummary.tradeable ? "TRADE" : "NO TRADE"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    {combinationSummary.engineDetails.map((eng, i) => {
+                      const isBuy = eng.dir === "▲";
+                      const isSell = eng.dir === "▼";
+                      const color = isBuy ? "#7a9e7a" : isSell ? "#c46a6a" : "#8a8070";
+                      return (
+                        <div key={i} className={`px-2 py-1.5 border border-[#e0dad0] ${eng.signal ? "bg-[#f8f6f2]" : "bg-[#f0ece6] opacity-60"}`}>
+                          <div className="flex items-center justify-between mb-0.5">
+                            <span className="text-[8px] font-medium text-[#2c2822]">{ENGINE_LABELS[eng.type as keyof typeof ENGINE_LABELS] || eng.type}</span>
+                            <div className="flex items-center gap-1">
+                              {eng.signal && <span className="text-[8px] font-bold" style={{ color }}>{eng.dir}</span>}
+                              <span className="text-[8px] font-bold" style={{ color }}>{eng.conf}%</span>
+                            </div>
+                          </div>
+                          <div className="h-1 bg-[#e0dad0] overflow-hidden">
+                            <div className="h-full transition-all duration-500" style={{
+                              width: `${eng.conf}%`,
+                              background: isBuy ? "linear-gradient(90deg, #7a9e7a, #6a8e6a)" : isSell ? "linear-gradient(90deg, #c46a6a, #b55a5a)" : "linear-gradient(90deg, #d4cdc2, #b5ab9c)",
+                            }} />
+                          </div>
+                          <span className="text-[7px] text-[#b5ab9c] leading-tight block truncate mt-0.5">
+                            {eng.signal ? (isBuy ? "Bullish" : isSell ? "Bearish" : "Neutral") : "No signal"}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {combinationResult.boostersApplied && combinationResult.boostersApplied.length > 0 && (
+                    <div className="mt-2 px-2 py-1.5 bg-[#f8f6f2] border border-[#e0dad0]">
+                      <span className="text-[7px] text-[#8a8070] uppercase tracking-wider font-semibold">Boosters</span>
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {combinationResult.boostersApplied.filter(b => b.applied).map((b, i) => (
+                          <span key={i} className="text-[7px] px-1 py-0.5 bg-[#7a9e7a]/10 text-[#7a9e7a] border border-[#7a9e7a]/20 font-semibold">
+                            +{b.points} {b.label}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-3 text-center">
+                  <span className="text-[8px] text-[#b5ab9c]">Running 6-engine analysis...</span>
                 </div>
               )}
             </div>

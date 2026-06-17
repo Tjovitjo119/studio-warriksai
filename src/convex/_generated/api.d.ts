@@ -13,6 +13,7 @@ import type * as auth_emailOtp from "../auth/emailOtp.js";
 import type * as http from "../http.js";
 import type * as journal from "../journal.js";
 import type * as marketData from "../marketData.js";
+import type * as signals from "../signals.js";
 import type * as storeMarketData from "../storeMarketData.js";
 import type * as trades from "../trades.js";
 import type * as users from "../users.js";
@@ -29,6 +30,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   journal: typeof journal;
   marketData: typeof marketData;
+  signals: typeof signals;
   storeMarketData: typeof storeMarketData;
   trades: typeof trades;
   users: typeof users;

@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
-import type { TradeRecord, MultiStrategyOutput, StrategyType } from "@/engine/types";
+import type { TradeRecord, MultiStrategyOutput, StrategyType, CombinationResult } from "@/engine/types";
 import { STRATEGY_LABELS } from "@/engine/types";
 
 interface BottomAnalyticsProps {
@@ -30,6 +30,16 @@ interface BottomAnalyticsProps {
   markets: import("@/engine/types").MarketData[];
   multiStrategy?: MultiStrategyOutput | null;
   strategySummary?: { label: string; consensus: string; agreement: string; strategyBreakdown: { type: string; dir: string; conf: number }[] } | null;
+  combinationResult?: CombinationResult | null;
+  combinationSummary?: {
+    totalEngines: number;
+    activeEngines: number;
+    agreementLabel: string;
+    consensus: string;
+    score: number;
+    tradeable: boolean;
+    engineDetails: { type: string; dir: string; conf: number; signal: boolean }[];
+  } | null;
 }
 
 function MetricCard({ icon: Icon, label, value, color, subValue }: {
@@ -47,7 +57,7 @@ function MetricCard({ icon: Icon, label, value, color, subValue }: {
   );
 }
 
-export default function BottomAnalytics({ trades, multiStrategy, strategySummary }: BottomAnalyticsProps) {
+export default function BottomAnalytics({ trades, multiStrategy, strategySummary, combinationResult, combinationSummary }: BottomAnalyticsProps) {
   const openTrades = useQuery(api.trades.getMyTrades, { status: "OPEN", limit: 20 });
   const tradeStats = useQuery(api.trades.getTradeStats);
   const closeTrade = useMutation(api.trades.closeTrade);
@@ -155,42 +165,62 @@ export default function BottomAnalytics({ trades, multiStrategy, strategySummary
             <span className="text-[8px] text-[#b5ab9c]">Running strategy analysis...</span>
           </div>
         )}
-      </div>
-
-      {/* Risk Manager */}
-      <div className="w-[220px] p-2 border-r border-[#e0dad0] shrink-0">
-        <div className="flex items-center gap-1.5 mb-2 px-1">
-          <Shield className="w-3 h-3 text-[#c49a6c]" />
-          <span className="text-[9px] font-semibold text-[#2c2822] uppercase tracking-wider">Risk Manager</span>
-        </div>
-        <div className="space-y-1.5">
-          {[
-            { label: "Account Balance", value: "$12,847.50", color: "text-[#2c2822]" },
-            { label: "Open Positions", value: `${displayPositions.length}`, color: "text-[#c49a6c]" },
-            { label: "Total P&L", value: `${(stats.totalPnl || 0) >= 0 ? "+" : ""}$${(stats.totalPnl || 0).toFixed(2)}`, color: (stats.totalPnl || 0) >= 0 ? "text-[#7a9e7a]" : "text-[#c46a6a]" },
-            { label: "Risk Per Trade", value: "1.5%", color: "text-[#2c2822]" },
-            { label: "Win Rate", value: `${(stats as any).winRate?.toFixed(0) || "0"}%`, color: "text-[#7a9e7a]" },
-          ].map((item, i) => (
-            <div key={i} className="flex items-center justify-between px-2 py-1.5 bg-[#f8f6f2] border border-[#e0dad0]">
-              <span className="text-[9px] text-[#8a8070]">{item.label}</span>
-              <span className={`text-[10px] font-bold ${item.color}`}>{item.value}</span>
-            </div>
-          ))}
-        </div>
-        <div className="mt-3 px-2">
-          <div className="flex items-center gap-1.5 mb-1.5">
-            <LineChart className="w-3 h-3 text-[#2c2822]" />
-            <span className="text-[8px] text-[#8a8070] uppercase tracking-wider font-semibold">Equity Curve</span>
+      </div>        {/* Risk Manager */}
+        <div className="w-[220px] p-2 border-r border-[#e0dad0] shrink-0">
+          <div className="flex items-center gap-1.5 mb-2 px-1">
+            <Shield className="w-3 h-3 text-[#c49a6c]" />
+            <span className="text-[9px] font-semibold text-[#2c2822] uppercase tracking-wider">Risk Manager</span>
           </div>
-          <div className="h-12 bg-[#f8f6f2] border border-[#e0dad0] flex items-end gap-[1px] px-1 py-1">
-            {[60, 62, 58, 65, 70, 68, 72, 78, 75, 82, 80, 85, 88, 84, 90, 92, 88, 95, 98, 100].map((h, i) => (
-              <div key={i} className="flex-1 flex flex-col justify-end">
-                <div className="w-full" style={{ height: `${h}%`, background: i % 5 === 4 ? "rgba(44, 40, 34, 0.3)" : "rgba(122, 158, 122, 0.25)" }} />
+          <div className="space-y-1.5">
+            {[
+              { label: "Account Balance", value: "$12,847.50", color: "text-[#2c2822]" },
+              { label: "Open Positions", value: `${displayPositions.length}`, color: "text-[#c49a6c]" },
+              { label: "Total P&L", value: `${(stats.totalPnl || 0) >= 0 ? "+" : ""}$${(stats.totalPnl || 0).toFixed(2)}`, color: (stats.totalPnl || 0) >= 0 ? "text-[#7a9e7a]" : "text-[#c46a6a]" },
+              { label: "Risk Per Trade", value: "1.5%", color: "text-[#2c2822]" },
+              { label: "Win Rate", value: `${(stats as any).winRate?.toFixed(0) || "0"}%`, color: "text-[#7a9e7a]" },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center justify-between px-2 py-1.5 bg-[#f8f6f2] border border-[#e0dad0]">
+                <span className="text-[9px] text-[#8a8070]">{item.label}</span>
+                <span className={`text-[10px] font-bold ${item.color}`}>{item.value}</span>
               </div>
             ))}
+            {combinationSummary && (
+              <>
+                <div className="flex items-center justify-between px-2 py-1.5 bg-[#f8f6f2] border border-[#e0dad0]">
+                  <span className="text-[9px] text-[#8a8070]">Engine Agreement</span>
+                  <span className={`text-[10px] font-bold ${combinationSummary.tradeable ? "text-[#7a9e7a]" : "text-[#c46a6a]"}`}>
+                    {combinationSummary.activeEngines}/{combinationSummary.totalEngines}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between px-2 py-1.5 bg-[#f8f6f2] border border-[#e0dad0]">
+                  <span className="text-[9px] text-[#8a8070]">Confluence</span>
+                  <span className={`text-[10px] font-bold ${combinationSummary.score >= 85 ? "text-[#7a9e7a]" : combinationSummary.score >= 75 ? "text-[#c49a6c]" : "text-[#c46a6a]"}`}>
+                    {combinationSummary.score}/100
+                  </span>
+                </div>
+                <div className="flex items-center justify-between px-2 py-1.5 bg-[#f8f6f2] border border-[#e0dad0]">
+                  <span className="text-[9px] text-[#8a8070]">Status</span>
+                  <span className={`text-[10px] font-bold ${combinationSummary.tradeable ? "text-[#7a9e7a]" : "text-[#c46a6a]"}`}>
+                    {combinationSummary.tradeable ? "TRADE" : "NO TRADE"}
+                  </span>
+                </div>
+              </>
+            )}
+          </div>
+          <div className="mt-3 px-2">
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <LineChart className="w-3 h-3 text-[#2c2822]" />
+              <span className="text-[8px] text-[#8a8070] uppercase tracking-wider font-semibold">Equity Curve</span>
+            </div>
+            <div className="h-12 bg-[#f8f6f2] border border-[#e0dad0] flex items-end gap-[1px] px-1 py-1">
+              {[60, 62, 58, 65, 70, 68, 72, 78, 75, 82, 80, 85, 88, 84, 90, 92, 88, 95, 98, 100].map((h, i) => (
+                <div key={i} className="flex-1 flex flex-col justify-end">
+                  <div className="w-full" style={{ height: `${h}%`, background: i % 5 === 4 ? "rgba(44, 40, 34, 0.3)" : "rgba(122, 158, 122, 0.25)" }} />
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
 
       {/* Active Positions */}
       <div className="flex-[1.5] p-2 shrink-0 min-w-0 overflow-y-auto">

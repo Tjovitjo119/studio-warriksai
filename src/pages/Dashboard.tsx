@@ -34,8 +34,9 @@ import SettingsView from "@/components/views/SettingsView";
 import { analyzeSession } from "@/engine/session";
 import { runDecisionEngine } from "@/engine/decision";
 import { runMultiStrategy, getStrategySummary } from "@/engine/strategies";
+import { runCombinationEngine, getEngineSummary } from "@/engine/strategies/combinationEngine";
 import { generateCandles, getMarketSnapshot, getMockSignals, getMockTradeHistory } from "@/engine/marketData";
-import type { MarketData, Signal, TradeRecord, Candle, TradeDecision, MultiStrategyOutput } from "@/engine/types";
+import type { MarketData, Signal, TradeRecord, Candle, TradeDecision, MultiStrategyOutput, CombinationResult } from "@/engine/types";
 import { DEFAULT_SYMBOLS } from "@/engine/types";
 
 export default function Dashboard() {
@@ -52,6 +53,8 @@ export default function Dashboard() {
   const [trades] = useState<TradeRecord[]>(getMockTradeHistory);
   const [lastDecision, setLastDecision] = useState<TradeDecision | null>(null);
   const [multiStrategy, setMultiStrategy] = useState<MultiStrategyOutput | null>(null);
+  const [combinationResult, setCombinationResult] = useState<CombinationResult | null>(null);
+  const [combinationSummary, setCombinationSummary] = useState<ReturnType<typeof getEngineSummary> | null>(null);
   const [sessionInfo, setSessionInfo] = useState(analyzeSession());
   const [refreshing, setRefreshing] = useState(false);
   const [dataSource, setDataSource] = useState<"live" | "synthetic">("synthetic");
@@ -97,6 +100,9 @@ export default function Dashboard() {
           setLastDecision(decision);
           const multi = runMultiStrategy(activeSymbol, activeCandles);
           setMultiStrategy(multi);
+          const combination = runCombinationEngine(activeSymbol, activeCandles);
+          setCombinationResult(combination);
+          setCombinationSummary(getEngineSummary(combination));
         }
 
         if (isInitial) {
@@ -132,6 +138,10 @@ export default function Dashboard() {
 
     const multi = runMultiStrategy(activeSymbol, initialCandles[activeSymbol]);
     setMultiStrategy(multi);
+
+    const combination = runCombinationEngine(activeSymbol, initialCandles[activeSymbol]);
+    setCombinationResult(combination);
+    setCombinationSummary(getEngineSummary(combination));
   }, [fetchLiveCandles, activeSymbol]);
 
   useEffect(() => {
@@ -198,6 +208,9 @@ export default function Dashboard() {
       setLastDecision(decision);
       const multi = runMultiStrategy(activeSymbol, candles);
       setMultiStrategy(multi);
+      const combination = runCombinationEngine(activeSymbol, candles);
+      setCombinationResult(combination);
+      setCombinationSummary(getEngineSummary(combination));
     }
   }, [activeSymbol, candlesMap]);
 
@@ -376,6 +389,8 @@ export default function Dashboard() {
                 signals={filteredSignals}
                 multiStrategy={multiStrategy}
                 strategySummary={strategySummary}
+                combinationResult={combinationResult}
+                combinationSummary={combinationSummary}
                 activeSymbol={activeSymbol}
                 currentPrice={candlesMap[activeSymbol]?.[candlesMap[activeSymbol]?.length - 1]?.close || 0}
                 decision={lastDecision}
@@ -394,6 +409,8 @@ export default function Dashboard() {
             markets={markets}
             multiStrategy={multiStrategy}
             strategySummary={strategySummary}
+            combinationResult={combinationResult}
+            combinationSummary={combinationSummary}
           />
         </div>
       )}
