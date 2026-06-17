@@ -153,6 +153,63 @@ Make sure all ui components are set up to be mobile responsive and compatible wi
 
 Set theme using `dark` or `light` variables at the parent className.
 
+## Deployment in VS Code
+
+This project can be opened, run, and deployed directly from Visual Studio Code.
+
+### Prerequisites
+
+1. **Install VS Code** — Download from [code.visualstudio.com](https://code.visualstudio.com/)
+2. **Open the project** — `File > Open Folder` and select the project root
+3. **Built-in terminal** — Use `` Ctrl+` `` (backtick) to open the integrated terminal
+
+### Running locally in VS Code
+
+```bash
+# Install dependencies (run once)
+bun install
+
+# Start the dev server
+bun run dev
+```
+
+The Vite dev server will print a local URL (usually `http://localhost:5173`). Ctrl+click the link or paste it into your browser.
+
+To start the Convex backend locally, run this in a **second terminal tab** in VS Code:
+
+```bash
+bunx convex dev
+```
+
+> **Tip:** Use VS Code's split terminal (`` Ctrl+\ ``) to run both commands side by side.
+
+### Deploying the frontend
+
+Build the static site with:
+
+```bash
+bun run build
+```
+
+This outputs the production build to the `dist/` folder, which can be deployed to any static host (Vercel, Netlify, Cloudflare Pages, an S3 bucket, etc.).
+
+### Deploying the Convex backend
+
+Convex deployments are managed through the Convex dashboard. To push your backend functions to your production deployment:
+
+```bash
+bunx convex deploy
+```
+
+You can manage deployments, environment variables, and view logs at [dashboard.convex.dev](https://dashboard.convex.dev).
+
+### VS Code extensions (recommended)
+
+- **Convex** (`convex.convex`) — Inline schema docs, function navigation, and deployment status
+- **Biome** (`biomejs.biome`) — Linting and formatting support
+- **Tailwind CSS IntelliSense** (`bradlc.vscode-tailwindcss`) — Autocomplete for Tailwind classes
+- **Error Lens** (`usernamehw.errorlens`) — Inline error highlighting
+
 ## Styling and Theming
 
 When changing the theme, always change the underlying theme of the shad cn components app-wide under `src/components/ui` and the colors in the index.css file.
