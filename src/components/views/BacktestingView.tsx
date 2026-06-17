@@ -9,23 +9,20 @@ import { motion } from "framer-motion";
 import {
   RefreshCcw,
   BarChart3,
-  TrendingUp,
-  TrendingDown,
   Target,
   DollarSign,
   LineChart,
   Play,
-  Calendar,
   Clock,
   Brain,
   Layers,
   PieChart,
   Activity,
 } from "lucide-react";
-import { STRATEGY_LABELS, ENGINE_LABELS } from "@/engine/types";
+import { ENGINE_LABELS } from "@/engine/types";
 import type { StrategyType, CombinationResult, Candle } from "@/engine/types";
 import { generateCandles } from "@/engine/marketData";
-import { runCombinationEngine, getEngineSummary } from "@/engine/strategies/combinationEngine";
+import { runCombinationEngine } from "@/engine/strategies/combinationEngine";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -147,7 +144,7 @@ export default function BacktestingView() {
           type,
           label: ENGINE_LABELS[type as keyof typeof ENGINE_LABELS] || type,
           signalCount: stats.signalCount,
-          avgConfidence: Math.round(stats.confSum / Math.max(iterations, 1)),
+          avgConfidence: Math.round(stats.confSum / Math.max(stats.signalCount, 1)),
           buyCount: stats.buyCount,
           sellCount: stats.sellCount,
           neutralCount: stats.neutralCount,
@@ -241,13 +238,6 @@ export default function BacktestingView() {
       sellPct: Math.round((e.sellCount / Math.max(e.total, 1)) * 100),
     }));
   }, [engineStats]);
-
-  const gradientOffset = () => {
-    if (equityCurveData.length < 2) return 0;
-    const first = equityCurveData[0].equity;
-    const last = equityCurveData[equityCurveData.length - 1].equity;
-    return last >= first ? 0 : 1;
-  };
 
   return (
     <div className="h-full flex flex-col bg-[#0a0e17]">
