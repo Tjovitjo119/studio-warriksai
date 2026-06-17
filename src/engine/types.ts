@@ -1,5 +1,5 @@
 // ============================================================================
-// WARRIKS AI v5.1 — Core Types & Interfaces
+// WARRIKS AI v5.2 — Core Types & Interfaces
 // ============================================================================
 
 export type Direction = "BUY" | "SELL" | "NEUTRAL";
@@ -215,4 +215,111 @@ export const STRATEGY_LABELS: Record<StrategyType, string> = {
   MOMENTUM: "Momentum",
   MEAN_REVERSION: "Mean Reversion",
   BREAKOUT: "Breakout",
+};
+
+// ============================================================================
+// Secondary Strategy Engine Types (v5.2)
+// ============================================================================
+
+export type StrategyEngineType =
+  | "MSS_FVG"
+  | "JUDAS_SWING"
+  | "BREAKER_BLOCK"
+  | "VWAP_REVERSION"
+  | "DAILY_RANGE_EXPANSION"
+  | "TURTLE_BREAKOUT";
+
+export type VoteStrength =
+  | "STRONG_BULLISH"
+  | "STRONG_BEARISH"
+  | "BULLISH"
+  | "BEARISH"
+  | "NEUTRAL";
+
+export type StrategyPriority = "VERY_HIGH" | "HIGH" | "MEDIUM" | "LOW";
+
+export type SessionPriority = "HIGHEST" | "SECOND" | "THIRD" | "LOWEST";
+
+// Individual secondary strategy engine output
+export interface StrategyEngineResult {
+  type: StrategyEngineType;
+  direction: Direction;
+  voteStrength: VoteStrength;
+  confidence: number; // 0–100
+  signal: boolean;
+  reason: string;
+  priority: StrategyPriority;
+  indicators: Record<string, number>;
+  active: boolean;
+}
+
+// Strategy Agreement Matrix
+export type AgreementLevelV2 = "ELITE" | "INSTITUTIONAL_GRADE" | "HIGH_PROBABILITY" | "MODERATE_PROBABILITY" | "NO_TRADE";
+
+// Confluence booster record
+export interface ConfluenceBooster {
+  label: string;
+  points: number;
+  applied: boolean;
+}
+
+// Combined output from the combination engine
+export interface CombinationResult {
+  engines: StrategyEngineResult[];
+  agreement: AgreementLevelV2;
+  agreementCount: number; // 0–6
+  consensusDirection: Direction;
+  confluenceScore: number; // 0–100 after boosters
+  boostersApplied: ConfluenceBooster[];
+  sessionPriority: SessionPriority;
+  tradeable: boolean;
+  description: string;
+}
+
+// VWAP calculation result
+export interface VWAPResult {
+  current: number;
+  deviation: number; // % distance from VWAP
+  above: boolean;
+}
+
+// Daily range information
+export interface DailyRange {
+  high: number;
+  low: number;
+  mid: number;
+  expanded: boolean;
+  expansionPercent: number;
+}
+
+// Asian session range
+export interface AsianRange {
+  high: number;
+  low: number;
+  midpoint: number;
+}
+
+// Engine labels for display
+export const ENGINE_LABELS: Record<StrategyEngineType, string> = {
+  MSS_FVG: "MSS + FVG (Primary)",
+  JUDAS_SWING: "Judas Swing Reversal",
+  BREAKER_BLOCK: "Breaker Block Execution",
+  VWAP_REVERSION: "VWAP Institutional Reversion",
+  DAILY_RANGE_EXPANSION: "Daily Range Expansion",
+  TURTLE_BREAKOUT: "Turtle Breakout Filter",
+};
+
+export const AGREEMENT_LABELS: Record<AgreementLevelV2, string> = {
+  ELITE: "Elite Setup — Maximum Confidence",
+  INSTITUTIONAL_GRADE: "Institutional Grade Setup",
+  HIGH_PROBABILITY: "High Probability Setup",
+  MODERATE_PROBABILITY: "Moderate Probability Setup",
+  NO_TRADE: "NO TRADE — Insufficient Agreement",
+};
+
+export const SESSION_PRIORITY_LABELS: Record<SessionPriority, string> = {
+  HIGHEST: "Highest Priority (08:30–11:00 NY)",
+  SECOND: "Second Priority (07:00–08:30 NY)",
+  THIRD: "Third Priority (13:00–15:00 NY)",
+  LOWEST: "Lowest Priority — Outside Approved Sessions",
 };

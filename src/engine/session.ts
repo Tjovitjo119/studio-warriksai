@@ -1,33 +1,34 @@
 // ============================================================================
-// WARRIKS AI v5.1 — Session & Timing Engine (NY Time Based)
+// WARRIKS AI v5.2 — Session & Timing Engine (NY Time Based)
 // Purpose: Ensure trades only occur in high liquidity windows
 // ============================================================================
 
-import type { Killzone, SessionResult } from "./types";
+import type { Killzone, SessionResult, SessionPriority } from "./types";
 
 /**
  * Get current New York time for session analysis.
  * Returns the current hour in NY timezone.
  */
-function getCurrentNYHour(): { hour: number; minute: number } {
+export function getCurrentNYHour(): { hour: number; minute: number } {
   const now = new Date();
-  const nyOffset = -4; // EDT (UTC-4) during DST, EST (UTC-5) otherwise
   const utcHour = now.getUTCHours();
   const utcMinute = now.getUTCMinutes();
-  const utcDay = now.getUTCDay();
-
-  // Approximate NY time
-  let nyHour = (utcHour + nyOffset) % 24;
-  if (nyHour < 0) nyHour += 24;
 
   // Check DST (simplified: April-October)
   const month = now.getUTCMonth() + 1;
   const isDST = month >= 3 && month <= 10;
-  if (isDST) nyHour = (utcHour - 4) % 24;
-  else nyHour = (utcHour - 5) % 24;
-  if (nyHour < 0) nyHour += 24;
+  const nyHourRaw = isDST ? utcHour - 4 : utcHour - 5;
+  const nyHour = ((nyHourRaw % 24) + 24) % 24;
 
   return { hour: nyHour, minute: utcMinute };
+}
+
+/**
+ * Get total minutes since midnight NY time.
+ */
+export function getCurrentNYMinutes(): number {
+  const { hour, minute } = getCurrentNYHour();
+  return hour * 60 + minute;
 }
 
 /**
@@ -54,12 +55,10 @@ function isInKillzone(killzone: Killzone): boolean {
 
 function getVolatility(killzone: Killzone, minute: number): "HIGH" | "MEDIUM" | "LOW" {
   if (killzone === "LONDON") {
-    // 7-9 is overlap, 9-11 is regular
     if (minute >= 0 && minute < 120) return "HIGH";
     return "MEDIUM";
   }
   if (killzone === "NEW_YORK") {
-    // 13-14 is open, 14-16 is regular
     if (minute >= 0 && minute < 60) return "HIGH";
     return "MEDIUM";
   }
@@ -79,6 +78,40 @@ function getNextKillzone(current: Killzone): { zone: Killzone; timeH: number; ti
 }
 
 /**
+ * Session Priority Matrix (NY Time):
+ *
+ * Highest Priority: 08:30 – 11:00  (510 – 660 min)
+ * Second Priority:  07:00 – 08:30  (420 – 510 min)
+ * Third Priority:   13:00 – 15:00  (780 – 900 min)
+ * Lowest Priority:  All other times
+ *
+ * Outside approved sessions → NO TRADE
+ */
+export function getSessionPriority(hour: number, minute: number): SessionPriority {
+  const totalMinutes = hour * 60 + minute;
+
+  // Highest Priority: 08:30 – 11:00 NY
+  if (totalMinutes >= 510 && totalMinutes < 660) return "HIGHEST";
+
+  // Second Priority: 07:00 – 08:30 NY
+  if (totalMinutes >= 420 && totalMinutes < 510) return "SECOND";
+
+  // Third Priority: 13:00 – 15:00 NY
+  if (totalMinutes >= 780 && totalMinutes < 900) return "THIRD";
+
+  // Lowest Priority / No Trade
+  return "LOWEST";
+}
+
+/**
+ * Check if current time is within an approved session window.
+ */
+export function isInApprovedSession(hour: number, minute: number): boolean {
+  const priority = getSessionPriority(hour, minute);
+  return priority !== "LOWEST";
+}
+
+/**
  * Analyze whether current time is suitable for trading based on killzone windows.
  */
 export function analyzeSession(): SessionResult {
@@ -86,6 +119,7 @@ export function analyzeSession(): SessionResult {
   const currentKillzone = getCurrentKillzone(hour, minute);
   const inKillzone = isInKillzone(currentKillzone);
   const volatility = getVolatility(currentKillzone, minute);
+  const sessionPriority = getSessionPriority(hour, minute);
 
   const next = getNextKillzone(currentKillzone);
   const nextKillzoneTime = inKillzone
@@ -98,7 +132,7 @@ export function analyzeSession(): SessionResult {
     volatility,
     nextKillzone: inKillzone ? null : next.zone,
     nextKillzoneTime,
-    description: buildSessionDescription(currentKillzone, inKillzone, volatility),
+    description: buildSessionDescription(currentKillzone, inKillzone, volatility, sessionPriority),
   };
 }
 
@@ -106,7 +140,8 @@ function buildSessionDescription(
   killzone: Killzone,
   inKZ: boolean,
   volatility: string,
+  priority: SessionPriority,
 ): string {
-  if (!inKZ) return `Outside killzone (${killzone}), volatility: ${volatility}`;
-  return `${killzone} killzone active, volatility: ${volatility}`;
+  if (!inKZ) return `Outside killzone (${killzone}), volatility: ${volatility}. Session priority: ${priority}`;
+  return `${killzone} killzone active, volatility: ${volatility}. Session priority: ${priority}`;
 }

@@ -1,6 +1,6 @@
 // ============================================================================
-// WARRIKS AI v5.1 — Strategy Orchestrator
-// Runs all 4 trading strategies and combines them into a consensus view
+// WARRIKS AI v5.2 — Strategy Orchestrator
+// Runs all 4 trading strategies PLUS the 5 secondary confirmation engines
 // ============================================================================
 
 import type {
@@ -9,12 +9,21 @@ import type {
   StrategyType,
   MultiStrategyOutput,
   AgreementLevel,
+  CombinationResult,
+  StrategyEngineResult,
 } from "../types";
 import { runDecisionEngine } from "../decision";
 import { analyzeMomentum } from "./momentum";
 import { analyzeMeanReversion } from "./meanReversion";
 import { analyzeBreakout } from "./breakout";
-import { generateCandles } from "../marketData";
+
+// New exports for the v5.2 secondary engines
+import { analyzeJudasSwingReversal } from "./judasSwingReversal";
+import { analyzeBreakerBlockExecution } from "./breakerBlockExecution";
+import { analyzeVWAPReversion } from "./vwapReversion";
+import { analyzeDailyRangeExpansion } from "./dailyRangeExpansion";
+import { analyzeTurtleBreakout } from "./turtleBreakoutFilter";
+import { runCombinationEngine, getEngineSummary } from "./combinationEngine";
 
 /**
  * Run all 4 trading strategies on the given candles and produce a combined view.
@@ -44,14 +53,6 @@ export function runMultiStrategy(
   let buyVotes = strategies.filter((s) => s.direction === "BUY" && s.confidence >= 40).length;
   let sellVotes = strategies.filter((s) => s.direction === "SELL" && s.confidence >= 40).length;
   let neutralVotes = strategies.length - buyVotes - sellVotes;
-
-  // Weighted votes by confidence
-  let buyWeight = strategies
-    .filter((s) => s.direction === "BUY")
-    .reduce((sum, s) => sum + s.confidence, 0);
-  let sellWeight = strategies
-    .filter((s) => s.direction === "SELL")
-    .reduce((sum, s) => sum + s.confidence, 0);
 
   // Determine consensus direction
   let consensusDirection: "BUY" | "SELL" | "NEUTRAL" = "NEUTRAL";
@@ -141,3 +142,22 @@ export function getStrategySummary(output: MultiStrategyOutput): {
     })),
   };
 }
+
+// ============================================================================
+// v5.2 Exports — Secondary Strategy Engines & Combination Engine
+// ============================================================================
+
+export {
+  analyzeJudasSwingReversal,
+  analyzeBreakerBlockExecution,
+  analyzeVWAPReversion,
+  analyzeDailyRangeExpansion,
+  analyzeTurtleBreakout,
+  runCombinationEngine,
+  getEngineSummary,
+};
+
+export type { CombinationResult, StrategyEngineResult } from "../types";
+
+// Re-export the combination engine's types
+export { getEngineSummary as getCombinationSummary } from "./combinationEngine";
