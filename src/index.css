@@ -1,14 +1,19 @@
-/* DO NOT CHANGE */
+/* ============================================================================
+ * WARRIKS AI — Studio Edition
+ * Gallery-clean, refined editorial aesthetic
+ * Warm off-whites • Thin framing • Muted neutrals • Soft spacing
+ * ============================================================================ */
+
 @import "tailwindcss";
 @import "tw-animate-css";
 @custom-variant dark (&:is(.dark *));
 
-/* DO NOT CHANGE */
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -40,87 +45,387 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-stone-50: #faf8f5;
+  --color-stone-100: #f5f2ed;
+  --color-stone-200: #e8e3da;
+  --color-stone-300: #d4cdc2;
+  --color-stone-400: #b5ab9c;
+  --color-stone-500: #988e7e;
+  --color-stone-600: #7a7163;
+  --color-stone-700: #5d5549;
+  --color-stone-800: #3e3830;
+  --color-stone-900: #221f1a;
+  --color-stone-950: #12100c;
 }
 
-/* CHANGE VALUES FOR THEME */
+/* ============================================================================
+ * CSS Custom Properties — Studio Palette
+ * ============================================================================ */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --radius: 2px;
+
+  /* Warm off-white background */
+  --background: #f8f6f2;
+  --foreground: #2c2822;
+
+  /* Cards: slightly lighter than bg, subtle separation */
+  --card: #fcfaf7;
+  --card-foreground: #2c2822;
+
+  --popover: #fcfaf7;
+  --popover-foreground: #2c2822;
+
+  /* Primary: a refined warm charcoal */
+  --primary: #2c2822;
+  --primary-foreground: #f8f6f2;
+
+  /* Secondary: warm stone */
+  --secondary: #e8e3da;
+  --secondary-foreground: #5d5549;
+
+  /* Muted: soft warm gray */
+  --muted: #f0ece6;
+  --muted-foreground: #8a8070;
+
+  /* Accent: warm taupe */
+  --accent: #e8e3da;
+  --accent-foreground: #3e3830;
+
+  /* Destructive: muted brick red */
+  --destructive: #c4624a;
+  --destructive-foreground: #fcfaf7;
+
+  /* Borders: very thin, subtle */
+  --border: #e0dad0;
+  --input: #e0dad0;
+  --ring: #b5ab9c;
+
+  /* Chart colors: soft, editorial */
+  --chart-1: #7a9e7a;
+  --chart-2: #c49a6c;
+  --chart-3: #8a9bb5;
+  --chart-4: #c46a6a;
+  --chart-5: #6a8a7a;
+
+  /* Sidebar: warm stone */
+  --sidebar: #f0ece6;
+  --sidebar-foreground: #3e3830;
+  --sidebar-primary: #2c2822;
+  --sidebar-primary-foreground: #f8f6f2;
+  --sidebar-accent: #e3ddd4;
+  --sidebar-accent-foreground: #3e3830;
+  --sidebar-border: #ddd6cb;
+  --sidebar-ring: #b5ab9c;
+
+  /* Studio-specific tokens */
+  --studio-bg: #f8f6f2;
+  --studio-card: #fcfaf7;
+  --studio-border: #e0dad0;
+  --studio-border-light: #e8e3da;
+  --studio-text: #2c2822;
+  --studio-text-secondary: #8a8070;
+  --studio-text-muted: #b5ab9c;
+  --studio-tag-bg: #f0ece6;
+  --studio-hover: #f3f0ea;
+  --studio-accent-green: #7a9e7a;
+  --studio-accent-red: #c46a6a;
+  --studio-accent-gold: #c49a6c;
+  --studio-accent-blue: #7a9bb5;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #1a1815;
+  --foreground: #e8e3da;
+  --card: #24211c;
+  --card-foreground: #e8e3da;
+  --popover: #24211c;
+  --popover-foreground: #e8e3da;
+  --primary: #e8e3da;
+  --primary-foreground: #1a1815;
+  --secondary: #2c2822;
+  --secondary-foreground: #b5ab9c;
+  --muted: #2c2822;
+  --muted-foreground: #8a8070;
+  --accent: #3e3830;
+  --accent-foreground: #e8e3da;
+  --destructive: #c46a4a;
+  --border: #3e3830;
+  --input: #3e3830;
+  --ring: #7a7163;
+  --chart-1: #7a9e7a;
+  --chart-2: #c49a6c;
+  --chart-3: #8a9bb5;
+  --chart-4: #c46a6a;
+  --chart-5: #6a8a7a;
+  --sidebar: #1a1815;
+  --sidebar-foreground: #e8e3da;
+  --sidebar-primary: #e8e3da;
+  --sidebar-primary-foreground: #1a1815;
+  --sidebar-accent: #2c2822;
+  --sidebar-accent-foreground: #e8e3da;
+  --sidebar-border: #3e3830;
+  --sidebar-ring: #7a7163;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+
   button:not([disabled]),
   [role="button"]:not([disabled]) {
     cursor: pointer;
   }
+}
+
+/* ============================================================================
+ * Typography
+ * ============================================================================ */
+.trading-mono {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', 'IBM Plex Mono', monospace;
+  font-feature-settings: "tnum", "zero", "cv02", "cv03";
+  font-variant-numeric: tabular-nums;
+}
+
+.trading-mono-sm {
+  font-family: 'SF Mono', 'Cascadia Code', 'JetBrains Mono', monospace;
+  font-feature-settings: "tnum", "zero";
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+  letter-spacing: -0.01em;
+}
+
+/* ============================================================================
+ * Studio Panel — Thin, refined card with hairline border
+ * ============================================================================ */
+.studio-panel {
+  background: var(--studio-card);
+  border: 1px solid var(--studio-border);
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.studio-panel:hover {
+  border-color: #ccc4b8;
+  background: #fdfcf9;
+}
+
+.studio-card {
+  background: var(--studio-card);
+  border: 1px solid var(--studio-border);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.studio-card:hover {
+  border-color: #d4cdc2;
+}
+
+/* ============================================================================
+ * Price & Direction Styles (Studio)
+ * ============================================================================ */
+.price-up {
+  color: #7a9e7a;
+}
+
+.price-down {
+  color: #c46a6a;
+}
+
+.price-neutral {
+  color: #b5ab9c;
+}
+
+.bg-up {
+  background: rgba(122, 158, 122, 0.08);
+}
+
+.bg-down {
+  background: rgba(196, 106, 106, 0.08);
+}
+
+/* ============================================================================
+ * Custom Scrollbar — Minimal
+ * ============================================================================ */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(181, 171, 156, 0.3);
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(181, 171, 156, 0.5);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(181, 171, 156, 0.3) transparent;
+}
+
+/* ============================================================================
+ * Animations
+ * ============================================================================ */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.3s ease;
+}
+
+/* ============================================================================
+ * Status Indicators (Studio)
+ * ============================================================================ */
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot.online {
+  background: #7a9e7a;
+}
+
+.status-dot.offline {
+  background: #d4cdc2;
+}
+
+.status-dot.warning {
+  background: #c49a6c;
+}
+
+.status-dot.error {
+  background: #c46a6a;
+}
+
+/* ============================================================================
+ * Button styles (Studio)
+ * ============================================================================ */
+.btn-ghost {
+  background: transparent;
+  border: none;
+  color: var(--studio-text-secondary);
+  transition: color 0.15s ease, background 0.15s ease;
+  padding: 4px 8px;
+  font-size: 11px;
+  border-radius: 2px;
+}
+
+.btn-ghost:hover {
+  color: var(--studio-text);
+  background: var(--studio-hover);
+}
+
+.btn-ghost.active {
+  color: var(--studio-text);
+  background: var(--studio-tag-bg);
+}
+
+/* ============================================================================
+ * Data Cell Styles
+ * ============================================================================ */
+.data-cell {
+  padding: 4px 8px;
+  font-size: 11px;
+  font-family: 'SF Mono', 'Cascadia Code', monospace;
+  font-feature-settings: "tnum", "zero";
+  font-variant-numeric: tabular-nums;
+}
+
+.data-header {
+  padding: 4px 8px;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--studio-text-secondary);
+  font-weight: 600;
+}
+
+/* ============================================================================
+ * Nav Item Styles (Studio)
+ * ============================================================================ */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: 11px;
+  color: var(--studio-text-secondary);
+  transition: all 0.15s ease;
+  border-left: 2px solid transparent;
+}
+
+.nav-item:hover {
+  color: var(--studio-text);
+  background: var(--studio-hover);
+}
+
+.nav-item.active {
+  color: var(--studio-text);
+  background: var(--studio-tag-bg);
+  border-left-color: var(--studio-text);
+}
+
+/* ============================================================================
+ * Content Area
+ * ============================================================================ */
+.content-area {
+  background: var(--studio-bg);
+}
+
+/* ============================================================================
+ * Chart Canvas
+ * ============================================================================ */
+.chart-canvas {
+  image-rendering: auto;
+}
+
+/* ============================================================================
+ * Gradients (Studio)
+ * ============================================================================ */
+.gradient-primary {
+  background: linear-gradient(135deg, #2c2822 0%, #3e3830 100%);
+}
+
+.gradient-green {
+  background: linear-gradient(135deg, #7a9e7a 0%, #6a8e6a 100%);
+}
+
+.gradient-gold {
+  background: linear-gradient(135deg, #c49a6c 0%, #b5895c 100%);
 }

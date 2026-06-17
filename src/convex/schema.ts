@@ -32,12 +32,59 @@ const schema = defineSchema(
       role: v.optional(roleValidator), // role of the user. do not remove
     }).index("email", ["email"]), // index for the email. do not remove or modify
 
-    // add other tables here
+    // Market data candles stored by symbol
+    marketData: defineTable({
+      symbol: v.string(),
+      candles: v.array(v.object({
+        timestamp: v.number(),
+        open: v.number(),
+        high: v.number(),
+        low: v.number(),
+        close: v.number(),
+        volume: v.number(),
+      })),
+      updatedAt: v.number(),
+    }).index("by_symbol", ["symbol"]),
 
-    // tableName: defineTable({
-    //   ...
-    //   // table fields
-    // }).index("by_field", ["field"])
+    // Trade records
+    trades: defineTable({
+      userId: v.id("users"),
+      symbol: v.string(),
+      direction: v.union(v.literal("BUY"), v.literal("SELL")),
+      entryPrice: v.number(),
+      exitPrice: v.optional(v.number()),
+      stopLoss: v.number(),
+      takeProfit: v.number(),
+      quantity: v.number(),
+      pnl: v.optional(v.number()),
+      pnlPercent: v.optional(v.number()),
+      riskReward: v.number(),
+      status: v.union(v.literal("OPEN"), v.literal("WIN"), v.literal("LOSS")),
+      entryModel: v.optional(v.string()),
+      killzone: v.optional(v.string()),
+      confluenceScore: v.optional(v.number()),
+      screenshot: v.optional(v.string()),
+      notes: v.optional(v.string()),
+      openedAt: v.number(),
+      closedAt: v.optional(v.number()),
+    }).index("by_user", ["userId"])
+      .index("by_user_status", ["userId", "status"])
+      .index("by_user_symbol", ["userId", "symbol"]),
+
+    // Journal entries for trade reflection
+    journal: defineTable({
+      userId: v.id("users"),
+      tradeId: v.optional(v.id("trades")),
+      symbol: v.string(),
+      title: v.string(),
+      content: v.string(),
+      tags: v.array(v.string()),
+      mood: v.optional(v.union(v.literal("BULLISH"), v.literal("BEARISH"), v.literal("NEUTRAL"), v.literal("FRUSTRATED"), v.literal("CONFIDENT"))),
+      lessons: v.optional(v.string()),
+      createdAt: v.number(),
+      updatedAt: v.number(),
+    }).index("by_user", ["userId"])
+      .index("by_user_trade", ["userId", "tradeId"]),
   },
   {
     schemaValidation: false,
