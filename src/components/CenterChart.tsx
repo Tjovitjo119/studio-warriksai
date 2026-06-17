@@ -230,11 +230,12 @@ export default function CenterChart({
       ctx.fillText(`SMA${period}`, labelX, yPrice(lastAvg) + 2);
     }
 
-    // Support & Resistance
+    // Support & Resistance levels with labels
     const recentHigh = Math.max(...visibleCandles.slice(-20).map((c) => c.high));
     const recentLow = Math.min(...visibleCandles.slice(-20).map((c) => c.low));
-    [recentHigh, recentLow, (recentHigh + recentLow) / 2].forEach((level) => {
-      ctx.strokeStyle = "rgba(181, 171, 156, 0.15)";
+    const midPrice = (recentHigh + recentLow) / 2;
+    [recentHigh, recentLow, midPrice].forEach((level, idx) => {
+      ctx.strokeStyle = idx === 0 ? "rgba(196, 106, 106, 0.2)" : idx === 1 ? "rgba(122, 158, 122, 0.2)" : "rgba(181, 171, 156, 0.12)";
       ctx.lineWidth = 0.5;
       ctx.setLineDash([6, 4]);
       ctx.beginPath();
@@ -242,6 +243,11 @@ export default function CenterChart({
       ctx.lineTo(W - padding.right, yPrice(level));
       ctx.stroke();
       ctx.setLineDash([]);
+      ctx.fillStyle = idx === 0 ? "rgba(196, 106, 106, 0.3)" : idx === 1 ? "rgba(122, 158, 122, 0.3)" : "rgba(181, 171, 156, 0.2)";
+      ctx.font = "7px 'SF Mono', monospace";
+      ctx.textAlign = "right";
+      const label = idx === 0 ? "R" : idx === 1 ? "S" : "M";
+      ctx.fillText(`${label}: ${level.toFixed(data.activeSymbol === "XAUUSD" ? 1 : 2)}`, W - padding.right - 4, yPrice(level) + 2);
     });
 
     // Sweep markers

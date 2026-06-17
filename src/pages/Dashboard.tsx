@@ -4,9 +4,8 @@
 // ============================================================================
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import { useNavigate } from "react-router";
-import { Zap } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Zap, AlertTriangle, CheckCircle, XCircle, Clock } from "lucide-react";
 import { useAction, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { useAuth } from "@/hooks/use-auth";
@@ -40,8 +39,7 @@ import type { MarketData, Signal, TradeRecord, Candle, TradeDecision, MultiStrat
 import { DEFAULT_SYMBOLS } from "@/engine/types";
 
 export default function Dashboard() {
-  const navigate = useNavigate();
-  const { user, signOut, isLoading, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const fetchLiveCandles = useAction(api.marketData.fetchLiveCandles);
   const saveSignal = useMutation(api.signals.createSignal);
 
@@ -60,13 +58,6 @@ export default function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [dataSource, setDataSource] = useState<"live" | "synthetic">("synthetic");
   const [rightPanelTab, setRightPanelTab] = useState<"signals" | "orders" | "journal">("signals");
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      navigate("/auth");
-    }
-  }, [isLoading, isAuthenticated, navigate]);
 
   // Initialize market data
   const loadMarketData = useCallback(async (isInitial: boolean) => {
@@ -343,18 +334,7 @@ export default function Dashboard() {
     return { winRate, totalPnl, avgRR, profitFactor, bestTrade, worstTrade, sharpe, maxDD, total: closed.length, wins: wins.length, losses: losses.length };
   }, [trades]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#f8f6f2] flex items-center justify-center">
-        <div className="flex items-center gap-2.5 text-[#8a8070]">
-          <div className="w-5 h-5 border border-[#2c2822] flex items-center justify-center">
-            <Zap className="w-3 h-3 text-[#2c2822] animate-pulse" />
-          </div>
-          <span className="text-xs text-[#8a8070]">Loading WARRIKS Studio Terminal...</span>
-        </div>
-      </div>
-    );
-  }
+  // No loading state needed — direct access without auth
 
   const isFullPageView = ["markets", "watchlist", "multichart", "backtesting", "risk", "performance", "calendar", "news", "strategy", "settings"].includes(activeNav);
   const showFullLayout = activeNav === "dashboard" || activeNav === "signals";
@@ -407,7 +387,7 @@ export default function Dashboard() {
             )}
             {activeNav === "backtesting" && <BacktestingView />}
             {activeNav === "risk" && <RiskManagerView markets={markets} />}
-            {activeNav === "performance" && <PerformanceView stats={perfStats} />}
+            {activeNav === "performance" && <PerformanceView stats={perfStats} decisionReason={lastDecision?.reason} decisionStatus={lastDecision?.status} confluenceScore={lastDecision?.confluenceScore} />}
             {activeNav === "calendar" && <CalendarView />}
             {activeNav === "news" && <NewsView />}
             {activeNav === "strategy" && <StrategyBuilderView />}
@@ -453,9 +433,9 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Bottom Analytics */}
+      {/* Bottom Analytics — compact */}
       {showFullLayout && (
-        <div className="h-[155px] shrink-0 border-t border-[#e0dad0] bg-white">
+        <div className="h-[120px] shrink-0 border-t border-[#e0dad0] bg-white">
           <BottomAnalytics
             trades={trades}
             markets={markets}
@@ -467,30 +447,55 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Status Bar */}
-      <footer className="h-6 bg-white border-t border-[#e0dad0] flex items-center justify-between px-3 shrink-0">
-        <div className="flex items-center gap-3">
-          <span className="text-[8px] text-[#b5ab9c] tracking-wider">WARRIKS STUDIO v5.1</span>
-          <span className="w-px h-2.5 bg-[#e0dad0]" />
-          <span className="text-[8px] text-[#b5ab9c]">Multi-Strategy Confluence Engine</span>
-          <span className="w-px h-2.5 bg-[#e0dad0]" />
-          <span className={`text-[8px] ${lastDecision?.confluenceScore && lastDecision.confluenceScore >= 85 ? "text-[#7a9e7a]" : "text-[#b5ab9c]"}`}>
-            Confluence: {lastDecision?.confluenceScore || 0}/100
+      {/* Status Bar — with precise NO_TRADE reasons */}
+      <footer className="h-8 bg-white border-t border-[#e0dad0] flex items-center justify-between px-3 shrink-0">
+        <div className="flex items-center gap-3 overflow-hidden">
+          <span className="text-[8px] text-[#b5ab9c] tracking-wider shrink-0">WARRIKS v5.1</span>
+          <span className="w-px h-2.5 bg-[#e0dad0] shrink-0" />
+          
+          {/* Decision Status — precise reason */}
+          {lastDecision && (
+            <>
+              <span className={`text-[8px] font-semibold shrink-0 flex items-center gap-1 ${
+                lastDecision.status === "TRADE" ? "text-[#7a9e7a]" : "text-[#c46a6a]"
+              }`}>
+                {lastDecision.status === "TRADE" ? <CheckCircle className="w-2.5 h-2.5" /> : <XCircle className="w-2.5 h-2.5" />}
+                {lastDecision.status === "TRADE" ? `TRADE ${lastDecision.direction}` : "NO TRADE"}
+              </span>
+              <span className="text-[7px] text-[#8a8070] truncate max-w-[280px]">
+                {lastDecision.reason}
+              </span>
+              <span className="w-px h-2.5 bg-[#e0dad0] shrink-0" />
+            </>
+          )}
+          
+          <span className={`text-[8px] shrink-0 ${lastDecision?.confluenceScore && lastDecision.confluenceScore >= 85 ? "text-[#7a9e7a]" : "text-[#b5ab9c]"}`}>
+            Conf: {lastDecision?.confluenceScore || 0}
           </span>
-          <span className="w-px h-2.5 bg-[#e0dad0]" />
-          <span className={`text-[8px] ${multiStrategy?.agreement === "STRONG" ? "text-[#7a9e7a]" : multiStrategy?.agreement === "CONFLICT" ? "text-[#c46a6a]" : "text-[#c49a6c]"}`}>
-            Strategies: {multiStrategy?.agreement || "—"} ({multiStrategy?.buyVotes || 0}▲/{multiStrategy?.sellVotes || 0}▼)
+          <span className="w-px h-2.5 bg-[#e0dad0] shrink-0" />
+          <span className={`text-[8px] shrink-0 ${multiStrategy?.agreement === "STRONG" ? "text-[#7a9e7a]" : multiStrategy?.agreement === "CONFLICT" ? "text-[#c46a6a]" : "text-[#c49a6c]"}`}>
+            Strat: {multiStrategy?.agreement || "—"} ({multiStrategy?.buyVotes || 0}▲/{multiStrategy?.sellVotes || 0}▼)
           </span>
-          <span className="w-px h-2.5 bg-[#e0dad0]" />
-          <span className="text-[8px] text-[#b5ab9c]">
+          <span className="w-px h-2.5 bg-[#e0dad0] shrink-0" />
+          <span className="text-[8px] shrink-0">
             {sessionInfo.inKillzone ? (
-              <span className="text-[#7a9e7a]">● {sessionInfo.currentKillzone} KILLZONE</span>
+              <span className="text-[#7a9e7a]">● {sessionInfo.currentKillzone}</span>
             ) : (
-              <span>○ {sessionInfo.currentKillzone}</span>
+              <span className="text-[#c46a6a]">○ {sessionInfo.currentKillzone} {sessionInfo.nextKillzoneTime ? `→ ${sessionInfo.nextKillzoneTime}` : ''}</span>
             )}
           </span>
+          
+          {/* Combination engine summary */}
+          {combinationSummary && (
+            <>
+              <span className="w-px h-2.5 bg-[#e0dad0] shrink-0" />
+              <span className={`text-[8px] shrink-0 ${combinationSummary.tradeable ? "text-[#7a9e7a]" : "text-[#c46a6a]"}`}>
+                6E: {combinationSummary.activeEngines}/6 {combinationSummary.agreementLabel}
+              </span>
+            </>
+          )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <span className="text-[8px] text-[#b5ab9c]">{user?.name || user?.email || "Trader"}</span>
           <span className="w-1.5 h-1.5 rounded-full bg-[#7a9e7a]" />
         </div>

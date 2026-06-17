@@ -14,6 +14,9 @@ import {
   BookOpen,
   DollarSign,
   Newspaper,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
 } from "lucide-react";
 import type { Signal, MultiStrategyOutput, StrategyType, TradeDecision, CombinationResult } from "@/engine/types";
 import { STRATEGY_LABELS, ENGINE_LABELS } from "@/engine/types";
@@ -153,12 +156,101 @@ export default function RightPanel({
           <TradeJournal activeSymbol={activeSymbol} />
         ) : (
           <div className="h-full overflow-y-auto">
+            {/* Trade Decision — Precise NO_TRADE reasons */}
+            {decision && (
+              <div className="m-2 bg-white border border-[#e0dad0]">
+                <div className="px-3 py-2 border-b border-[#e8e3da] flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    {decision.status === "TRADE" ? (
+                      <CheckCircle className="w-3 h-3 text-[#7a9e7a]" />
+                    ) : (
+                      <XCircle className="w-3 h-3 text-[#c46a6a]" />
+                    )}
+                    <span className="text-[10px] font-semibold text-[#2c2822] uppercase tracking-wider">
+                      {decision.status === "TRADE" ? `${decision.direction} SIGNAL` : "NO TRADE"}
+                    </span>
+                  </div>
+                  <span className={`text-[9px] font-bold ${decision.status === "TRADE" ? "text-[#7a9e7a]" : "text-[#c46a6a]"}`}>
+                    {decision.confluenceScore}/100
+                  </span>
+                </div>
+                <div className="p-2.5">
+                  {decision.status === "TRADE" ? (
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] text-[#8a8070]">Direction</span>
+                        <span className={`text-[10px] font-bold ${decision.direction === "BUY" ? "text-[#7a9e7a]" : "text-[#c46a6a]"}`}>{decision.direction}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] text-[#8a8070]">Bias / Structure</span>
+                        <span className="text-[9px] font-mono text-[#2c2822]">{decision.marketBias} {decision.structureState}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] text-[#8a8070]">Entry Model</span>
+                        <span className="text-[9px] font-mono text-[#7a9bb5]">{decision.orderFlowModel}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[9px] text-[#8a8070]">Liq Sweep</span>
+                        <span className={`text-[9px] font-bold ${decision.liquiditySweep ? "text-[#7a9e7a]" : "text-[#b5ab9c]"}`}>{decision.liquiditySweep ? "✓" : "✗"}</span>
+                      </div>
+                      <div className="mt-1.5 pt-1.5 border-t border-[#e8e3da]">
+                        <div className="text-[8px] text-[#8a8070] leading-relaxed">{decision.reason}</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="flex items-center gap-1.5 mb-2 px-1 py-1 bg-[#c46a6a]/5 border border-[#c46a6a]/20">
+                        <AlertTriangle className="w-3 h-3 text-[#c46a6a] shrink-0" />
+                        <span className="text-[8px] text-[#c46a6a] font-semibold">Why no trade:</span>
+                      </div>
+                      <div className="px-1.5 space-y-1">
+                        {decision.reason.split(", ").filter(r => r.startsWith("Insufficient") || !r.startsWith("Insufficient")).map((reason, i) => {
+                          const isHeader = reason.startsWith("Insufficient");
+                          if (isHeader) {
+                            const detail = decision.reason.replace("Insufficient confluence: ", "").split(", ")
+                            return (
+                              <div key={i} className="space-y-1">
+                                <span className="text-[8px] text-[#8a8070] font-semibold block mb-1">Missing conditions:</span>
+                                {detail.map((r, j) => (
+                                  <div key={j} className="flex items-center gap-1.5">
+                                    <span className="w-1 h-1 rounded-full bg-[#c46a6a]" />
+                                    <span className="text-[8px] text-[#5d5549]">{r.trim()}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )
+                          }
+                          return (
+                            <div key={i} className="flex items-center gap-1.5">
+                              <span className="w-1 h-1 rounded-full bg-[#c46a6a]" />
+                              <span className="text-[8px] text-[#5d5549]">{reason.trim()}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                      <div className="mt-2 px-2 py-1.5 bg-[#f0ece6] border border-[#e0dad0]">
+                        <span className="text-[7px] text-[#8a8070] uppercase tracking-wider font-semibold">Market State</span>
+                        <div className="grid grid-cols-2 gap-x-2 gap-y-0.5 mt-1">
+                          <span className="text-[7px] text-[#5d5549]">Bias: {decision.marketBias}</span>
+                          <span className="text-[7px] text-[#5d5549]">Structure: {decision.structureState}</span>
+                          <span className="text-[7px] text-[#5d5549]">Liq Sweep: {decision.liquiditySweep ? "✓" : "✗"}</span>
+                          <span className="text-[7px] text-[#5d5549]">Entry: {decision.orderFlowModel}</span>
+                          <span className="text-[7px] text-[#5d5549]">Quality: {decision.tradeQuality}</span>
+                          <span className="text-[7px] text-[#5d5549]">Conf: {decision.confluenceScore}/100</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* AI Signal */}
             <div className="m-2 bg-white border border-[#e0dad0]">
               <div className="px-3 py-2 border-b border-[#e8e3da] flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <Brain className="w-3 h-3 text-[#2c2822]" />
-                  <span className="text-[10px] font-semibold text-[#2c2822] uppercase tracking-wider">AI Signal</span>
+                  <span className="text-[10px] font-semibold text-[#2c2822] uppercase tracking-wider">Top Signal</span>
                 </div>
                 <span className="text-[8px] text-[#b5ab9c]">
                   {new Date().toLocaleTimeString()}
@@ -166,8 +258,8 @@ export default function RightPanel({
               </div>
 
               {hasSignal ? (
-                <div className="p-3">
-                  <div className="flex items-center justify-between mb-3">
+                <div className="p-2.5">
+                  <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-bold text-[#2c2822]">{mainSignal.symbol}</span>
                       <div className={`flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold border ${
@@ -184,7 +276,7 @@ export default function RightPanel({
                     </div>
                   </div>
 
-                  <div className="mb-3">
+                  <div className="mb-2">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-[9px] text-[#8a8070]">Strategy Confluence</span>
                       <span className="text-[9px] font-bold text-[#2c2822]">{mainSignal.enginesAgreed}/4</span>
@@ -206,39 +298,31 @@ export default function RightPanel({
                     </div>
                   </div>
 
-                  <div className="space-y-1 text-[10px] mb-3">
+                  <div className="space-y-1 text-[10px] mb-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[#8a8070]">Entry Zone</span>
                       <span className="font-mono text-[#2c2822]">
-                        {mainSignal.entryZone.low.toFixed(1)} – {mainSignal.entryZone.high.toFixed(1)}
+                        {mainSignal.entryZone.low.toFixed(mainSignal.symbol === "XAUUSD" ? 1 : 2)} – {mainSignal.entryZone.high.toFixed(mainSignal.symbol === "XAUUSD" ? 1 : 2)}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-[#8a8070]">Stop Loss</span>
-                      <span className="font-mono text-[#c46a6a]">{mainSignal.stopLoss.toFixed(1)}</span>
+                      <span className="font-mono text-[#c46a6a]">{mainSignal.stopLoss.toFixed(mainSignal.symbol === "XAUUSD" ? 1 : 2)}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-[#8a8070]">TP1</span>
-                      <span className="font-mono text-[#7a9e7a]">{mainSignal.takeProfit.tp1.toFixed(1)}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#8a8070]">TP2</span>
-                      <span className="font-mono text-[#7a9e7a]">{mainSignal.takeProfit.tp2.toFixed(1)}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#8a8070]">TP3</span>
-                      <span className="font-mono text-[#7a9e7a]">{mainSignal.takeProfit.tp3.toFixed(1)}</span>
+                      <span className="font-mono text-[#7a9e7a]">{mainSignal.takeProfit.tp1.toFixed(mainSignal.symbol === "XAUUSD" ? 1 : 2)}</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between py-1.5 border-t border-[#e8e3da]">
+                  <div className="flex items-center justify-between py-1 border-t border-[#e8e3da]">
                     <span className="text-[9px] text-[#8a8070]">Risk:Reward</span>
                     <span className={`text-[11px] font-bold ${mainSignal.riskReward >= 2 ? "text-[#7a9e7a]" : "text-[#c49a6c]"}`}>
                       1:{mainSignal.riskReward.toFixed(1)}
                     </span>
                   </div>
 
-                  <div className="mt-2 flex items-center gap-1">
+                  <div className="mt-1 flex items-center gap-1">
                     <span className="px-1 py-0.5 text-[8px] font-mono text-[#7a9e7a] bg-[#7a9e7a]/5 border border-[#7a9e7a]/20">
                       {mainSignal.entryModel}
                     </span>
@@ -248,10 +332,12 @@ export default function RightPanel({
                   </div>
                 </div>
               ) : (
-                <div className="p-6 flex flex-col items-center justify-center text-center">
-                  <Brain className="w-6 h-6 text-[#b5ab9c] mb-2 opacity-50" />
+                <div className="p-4 flex flex-col items-center justify-center text-center">
+                  <Brain className="w-5 h-5 text-[#b5ab9c] mb-1.5 opacity-50" />
                   <span className="text-[10px] text-[#8a8070]">No active signals</span>
-                  <span className="text-[8px] text-[#b5ab9c] mt-1">Waiting for confluence ≥ 75</span>
+                  {decision && (
+                    <span className="text-[8px] text-[#b5ab9c] mt-0.5">Score: {decision.confluenceScore}/100</span>
+                  )}
                 </div>
               )}
             </div>

@@ -1,11 +1,14 @@
 // ============================================================================
-// WARRIKS AI — Multi-Chart View
-// Full multi-chart grid with real-time live prices across all timeframes
+// WARRIKS AI — Multi-Chart View (V2)
+// Crystal-clear multi-timeframe candle charts with dark theme, all indicators
 // ============================================================================
 
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
-import { BarChart3, Maximize2, Minus, Plus, Crosshair, LayoutGrid, RefreshCw, Timer } from "lucide-react";
+import {
+  BarChart3, LayoutGrid, Timer,
+  TrendingUp, TrendingDown, Activity,
+} from "lucide-react";
 import type { Candle } from "@/engine/types";
 
 interface MultiChartViewProps {
@@ -19,7 +22,11 @@ interface MultiChartViewProps {
 const TIMEFRAMES = ["1M", "5M", "15M", "30M", "1H", "4H", "D", "W"];
 const SYMBOLS = ["NAS100", "XAUUSD", "EURUSD", "GBPUSD", "USDJPY", "BTCUSD", "ETHUSD"];
 
-function MiniChartCanvas({ candles, symbol, label, color }: { candles: Candle[]; symbol: string; label: string; color?: string }) {
+function MiniChartCanvas({
+  candles, symbol, label, color,
+}: {
+  candles: Candle[]; symbol: string; label: string; color?: string;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const draw = useCallback(() => {
@@ -32,97 +39,169 @@ function MiniChartCanvas({ candles, symbol, label, color }: { candles: Candle[];
     const rect = canvas.getBoundingClientRect();
     const W = rect.width;
     const H = rect.height;
+    if (W === 0 || H === 0) return;
     canvas.width = W * dpr;
     canvas.height = H * dpr;
     ctx.scale(dpr, dpr);
 
-    ctx.fillStyle = "#080c14";
+    ctx.fillStyle = "#0d1520";
     ctx.fillRect(0, 0, W, H);
 
     if (candles.length < 3) {
       ctx.fillStyle = "#475569";
-      ctx.font = "9px monospace";
+      ctx.font = "10px 'JetBrains Mono', monospace";
       ctx.textAlign = "center";
       ctx.fillText("No data", W / 2, H / 2);
       return;
     }
 
-    const padding = { top: 20, right: 8, bottom: 16, left: 50 };
-    const chartW = Math.max(20, W - padding.left - padding.right);
-    const chartH = Math.max(20, H - padding.top - padding.bottom);
+    const padding = { top: 22, right: 8, bottom: 18, left: 52 };
+    const chartW = Math.max(30, W - padding.left - padding.right);
+    const chartH = Math.max(30, H - padding.top - padding.bottom);
 
-    const visible = candles.slice(-60);
-    const high = Math.max(...visible.map((c) => c.high)) * 1.003;
-    const low = Math.min(...visible.map((c) => c.low)) * 0.997;
+    const visible = candles.slice(-80);
+    const high = Math.max(...visible.map((c) => c.high)) * 1.002;
+    const low = Math.min(...visible.map((c) => c.low)) * 0.998;
     const range = high - low || 1;
     const candleW = Math.max(1.5, chartW / visible.length - 0.5);
+    const barSpacing = candleW + 0.5;
 
     const yPrice = (p: number) => padding.top + chartH - ((p - low) / range) * chartH;
 
-    // Grid
-    ctx.strokeStyle = "rgba(30, 45, 61, 0.2)";
+    // Grid lines
+    ctx.strokeStyle = "rgba(30, 45, 61, 0.3)";
     ctx.lineWidth = 0.3;
-    for (let i = 0; i <= 3; i++) {
-      const y = padding.top + (chartH / 3) * i;
-      ctx.beginPath(); ctx.moveTo(padding.left, y); ctx.lineTo(W - padding.right, y); ctx.stroke();
-      const price = high - (range / 3) * i;
+    for (let i = 0; i <= 4; i++) {
+      const y = padding.top + (chartH / 4) * i;
+      ctx.beginPath();
+      ctx.moveTo(padding.left, y);
+      ctx.lineTo(W - padding.right, y);
+      ctx.stroke();
+      const price = high - (range / 4) * i;
       ctx.fillStyle = "#475569";
       ctx.font = "7px 'JetBrains Mono', monospace";
       ctx.textAlign = "right";
       ctx.fillText(price.toFixed(symbol === "XAUUSD" ? 1 : 2), padding.left - 4, y + 2);
     }
 
-    // SMA
-    const period = 8;
-    ctx.beginPath();
-    ctx.strokeStyle = "rgba(6, 182, 212, 0.25)";
-    ctx.lineWidth = 0.5;
-    for (let i = period - 1; i < visible.length; i++) {
-      const slice = visible.slice(i - period + 1, i + 1);
-      const avg = slice.reduce((s, c) => s + c.close, 0) / period;
-      const x = padding.left + i * (candleW + 0.5);
-      if (i === period - 1) ctx.moveTo(x, yPrice(avg));
-      else ctx.lineTo(x, yPrice(avg));
+    // Volume bars
+    const volMax = Math.max(...visible.map((c) => c.volume), 1);
+    const volBaseY = padding.top + chartH + 2;
+    const volH = 12;
+    visible.forEach((candle, i) => {
+      const x = padding.left + i * barSpacing;
+      const isUp = candle.close >= candle.open;
+      const volHt = (candle.volume / volMax) * volH;
+      ctx.fillStyle = isUp ? "rgba(16, 185, 129, 0.15)" : "rgba(239, 68, 68, 0.15)";
+      ctx.fillRect(x, volBaseY + volH - volHt, Math.max(1, candleW), volHt);
+    });
+
+    // SMA lines (8 and 21 period)
+    for (const period of [8, 21]) {
+      ctx.beginPath();
+      ctx.strokeStyle = period === 8 ? "rgba(6, 182, 212, 0.35)" : "rgba(245, 158, 11, 0.25)";
+      ctx.lineWidth = period === 8 ? 1 : 0.8;
+      let started = false;
+      for (let i = period - 1; i < visible.length; i++) {
+        const slice = visible.slice(i - period + 1, i + 1);
+        const avg = slice.reduce((s, c) => s + c.close, 0) / period;
+        const x = padding.left + i * barSpacing + candleW / 2;
+        const y = yPrice(avg);
+        if (!started) { ctx.moveTo(x, y); started = true; }
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
     }
-    ctx.stroke();
 
     // Candles
     visible.forEach((candle, i) => {
-      const x = padding.left + i * (candleW + 0.5);
+      const x = padding.left + i * barSpacing;
       const isUp = candle.close >= candle.open;
-      ctx.strokeStyle = isUp ? "rgba(16, 185, 129, 0.5)" : "rgba(239, 68, 68, 0.5)";
+      const wickColor = isUp ? "rgba(16, 185, 129, 0.6)" : "rgba(239, 68, 68, 0.6)";
+      const bodyColor = isUp ? "rgba(16, 185, 129, 0.85)" : "rgba(239, 68, 68, 0.85)";
+
+      // Wick
+      ctx.strokeStyle = wickColor;
       ctx.lineWidth = 0.5;
-      ctx.beginPath(); ctx.moveTo(x + candleW / 2, yPrice(candle.high)); ctx.lineTo(x + candleW / 2, yPrice(candle.low)); ctx.stroke();
-      ctx.fillStyle = isUp ? "rgba(16, 185, 129, 0.7)" : "rgba(239, 68, 68, 0.7)";
+      ctx.beginPath();
+      ctx.moveTo(x + candleW / 2, yPrice(candle.high));
+      ctx.lineTo(x + candleW / 2, yPrice(candle.low));
+      ctx.stroke();
+
+      // Body
       const bodyTop = yPrice(Math.max(candle.open, candle.close));
       const bodyBottom = yPrice(Math.min(candle.open, candle.close));
+      ctx.fillStyle = bodyColor;
       ctx.fillRect(x, bodyTop, candleW, Math.max(1, bodyBottom - bodyTop));
     });
 
-    // Label
-    ctx.fillStyle = color || "rgba(6, 182, 212, 0.6)";
-    ctx.font = "bold 9px 'JetBrains Mono', monospace";
+    // S/R levels
+    const recentHigh = Math.max(...visible.slice(-20).map((c) => c.high));
+    const recentLow = Math.min(...visible.slice(-20).map((c) => c.low));
+    ctx.strokeStyle = "rgba(245, 158, 11, 0.15)";
+    ctx.lineWidth = 0.3;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath();
+    ctx.moveTo(padding.left, yPrice(recentHigh));
+    ctx.lineTo(W - padding.right, yPrice(recentHigh));
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(padding.left, yPrice(recentLow));
+    ctx.lineTo(W - padding.right, yPrice(recentLow));
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Current price line
+    const lastPrice = visible[visible.length - 1].close;
+    const curY = yPrice(lastPrice);
+    ctx.strokeStyle = "rgba(226, 232, 240, 0.2)";
+    ctx.lineWidth = 0.5;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(padding.left, curY);
+    ctx.lineTo(W - padding.right, curY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Label badge
+    ctx.fillStyle = color || "rgba(6, 182, 212, 0.7)";
+    ctx.font = "bold 10px 'JetBrains Mono', monospace";
     ctx.textAlign = "left";
     ctx.fillText(label, padding.left + 3, padding.top + 12);
 
     // Current price
-    const lastP = visible[visible.length - 1].close;
-    ctx.fillStyle = "rgba(226, 232, 240, 0.5)";
+    ctx.fillStyle = "rgba(226, 232, 240, 0.6)";
     ctx.font = "8px 'JetBrains Mono', monospace";
     ctx.textAlign = "right";
-    ctx.fillText(lastP.toFixed(symbol === "XAUUSD" ? 1 : 2), W - padding.right, padding.top + 12);
+    ctx.fillText(lastPrice.toFixed(symbol === "XAUUSD" ? 1 : 2), W - padding.right, padding.top + 12);
+
+    // Change info
+    if (visible.length >= 2) {
+      const change = lastPrice - visible[0].close;
+      const changePct = (change / visible[0].close) * 100;
+      ctx.fillStyle = change >= 0 ? "rgba(16, 185, 129, 0.4)" : "rgba(239, 68, 68, 0.4)";
+      ctx.font = "7px 'JetBrains Mono', monospace";
+      ctx.textAlign = "left";
+      const changeText = `${change >= 0 ? "+" : ""}${change.toFixed(symbol === "XAUUSD" ? 1 : 2)} (${changePct >= 0 ? "+" : ""}${changePct.toFixed(2)}%)`;
+      ctx.fillText(changeText, padding.left + 3, padding.top + 22);
+    }
   }, [candles, symbol, label, color]);
 
-  useEffect(() => { draw(); }, [draw]);
+  useEffect(() => {
+    draw();
+    const timer = setInterval(draw, 3000);
+    return () => clearInterval(timer);
+  }, [draw]);
 
-  return <canvas ref={canvasRef} className="w-full h-full" style={{ display: "block" }} />;
+  return (
+    <canvas ref={canvasRef} className="w-full h-full" style={{ display: "block" }} />
+  );
 }
 
 export default function MultiChartView({
   candlesMap, activeSymbol, onSymbolChange, selectedTimeframe, onTimeframeChange,
 }: MultiChartViewProps) {
   const [layout, setLayout] = useState<"2x2" | "3x3">("2x2");
-  const [expandedChart, setExpandedChart] = useState<string | null>(null);
 
   const mainCandles = candlesMap[activeSymbol] || [];
 
@@ -151,6 +230,15 @@ export default function MultiChartView({
 
   const colors = ["#06b6d4", "#10b981", "#f59e0b", "#8b5cf6", "#ef4444", "#ec4899", "#14b8a6", "#6366f1", "#f97316"];
 
+  // Direction stats
+  const marketDir = useMemo(() => {
+    if (mainCandles.length < 2) return { dir: "—", change: 0, pct: 0 };
+    const last = mainCandles[mainCandles.length - 1].close;
+    const first = mainCandles[0].close;
+    const change = last - first;
+    return { dir: change >= 0 ? "UP" : "DOWN", change, pct: (change / first) * 100 };
+  }, [mainCandles]);
+
   return (
     <div className="h-full flex flex-col bg-[#0a0e17]">
       {/* Header */}
@@ -159,6 +247,12 @@ export default function MultiChartView({
           <BarChart3 className="w-4 h-4 text-[#06b6d4]" />
           <span className="text-sm font-semibold text-[#e2e8f0] tracking-wider">Multi-Chart</span>
           <span className="text-[10px] text-[#475569]">{layout === "2x2" ? "4 Charts" : "9 Charts"}</span>
+          <span className={`text-[10px] flex items-center gap-1 ${
+            marketDir.dir === "UP" ? "text-[#10b981]" : marketDir.dir === "DOWN" ? "text-[#ef4444]" : "text-[#475569]"
+          }`}>
+            {marketDir.dir === "UP" ? <TrendingUp className="w-3 h-3" /> : marketDir.dir === "DOWN" ? <TrendingDown className="w-3 h-3" /> : <Activity className="w-3 h-3" />}
+            {marketDir.pct >= 0 ? "+" : ""}{marketDir.pct.toFixed(2)}%
+          </span>
         </div>
         <div className="flex items-center gap-2">
           {/* Timeframes */}
@@ -193,39 +287,50 @@ export default function MultiChartView({
       <div className={`flex-1 grid gap-px bg-[#1e2d3d]/30 overflow-hidden ${
         layout === "2x2" ? "grid-cols-2 grid-rows-2" : "grid-cols-3 grid-rows-3"
       }`}>
-        {timeframes.map((tf, i) => (
-          <div key={tf} className="relative bg-[#0a0e17] overflow-hidden">
-            <MiniChartCanvas
-              candles={getTfCandles(tf)}
-              symbol={activeSymbol}
-              label={tf}
-              color={colors[i % colors.length]}
-            />
-            <div className="absolute bottom-1 left-2 text-[7px] text-[#475569]">
-              {getTfCandles(tf).length} candles
+        {timeframes.map((tf, i) => {
+          const tfCandles = getTfCandles(tf);
+          return (
+            <div key={tf} className="relative bg-[#0a0e17] overflow-hidden">
+              <MiniChartCanvas
+                candles={tfCandles}
+                symbol={activeSymbol}
+                label={tf}
+                color={colors[i % colors.length]}
+              />
+              <div className="absolute bottom-0.5 left-2 text-[7px] text-[#475569] flex items-center gap-1">
+                <Timer className="w-2 h-2" />
+                {tfCandles.length} candles
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Bottom info bar */}
       <div className="h-7 bg-[#111d2e] border-t border-[#1e2d3d] flex items-center justify-between px-4 shrink-0">
         <div className="flex items-center gap-3 text-[8px] text-[#475569]">
-          <span>{activeSymbol}</span>
+          <span className="font-semibold text-[#06b6d4]">{activeSymbol}</span>
           <span className="w-px h-2.5 bg-[#1e2d3d]" />
           {mainCandles.length > 0 && (
             <>
-              <span>O: {mainCandles[mainCandles.length - 1].open.toFixed(2)}</span>
-              <span>H: {mainCandles[mainCandles.length - 1].high.toFixed(2)}</span>
-              <span>L: {mainCandles[mainCandles.length - 1].low.toFixed(2)}</span>
-              <span>C: {mainCandles[mainCandles.length - 1].close.toFixed(2)}</span>
+              <span>O: {mainCandles[mainCandles.length - 1].open.toFixed(activeSymbol === "XAUUSD" ? 1 : 2)}</span>
+              <span>H: {mainCandles[mainCandles.length - 1].high.toFixed(activeSymbol === "XAUUSD" ? 1 : 2)}</span>
+              <span>L: {mainCandles[mainCandles.length - 1].low.toFixed(activeSymbol === "XAUUSD" ? 1 : 2)}</span>
+              <span>C: {mainCandles[mainCandles.length - 1].close.toFixed(activeSymbol === "XAUUSD" ? 1 : 2)}</span>
+              <span className="w-px h-2.5 bg-[#1e2d3d]" />
+              <span className={marketDir.dir === "UP" ? "text-[#10b981]" : marketDir.dir === "DOWN" ? "text-[#ef4444]" : ""}>
+                V: {(mainCandles.slice(-5).reduce((s, c) => s + c.volume, 0)).toLocaleString()}
+              </span>
             </>
           )}
         </div>
-        <span className="flex items-center gap-2 text-[8px] text-[#475569]">
+        <div className="flex items-center gap-3 text-[8px] text-[#475569]">
+          <span className="flex items-center gap-1"><span className="w-2 h-px bg-[#06b6d4]" /> SMA8</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-px bg-[#f59e0b]" /> SMA21</span>
+          <span>S/R Levels</span>
           <Timer className="w-2.5 h-2.5" />
-          Live — {selectedTimeframe} aggregation
-        </span>
+          <span>Live — {selectedTimeframe}</span>
+        </div>
       </div>
     </div>
   );
